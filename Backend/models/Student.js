@@ -28,7 +28,7 @@ const StudentSchema = new mongoose.Schema({
   },
   rank: {
     type: String,
-    default: 'SDE Recruit'
+    default: 'Fresher'
   },
   xp: {
     type: Number,
@@ -36,7 +36,7 @@ const StudentSchema = new mongoose.Schema({
   },
   coins: {
     type: Number,
-    default: 100
+    default: 200
   },
   streak: {
     type: Number,

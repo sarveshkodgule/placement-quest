@@ -82,14 +82,16 @@ router.post('/complete', protect, async (req, res) => {
 
     // Evaluate ranks dynamically
     const RANKS = [
-      { name: 'SDE Recruit', xpNeeded: 0 },
-      { name: 'Frontend Mage', xpNeeded: 100 },
-      { name: 'Backend Guardian', xpNeeded: 250 },
-      { name: 'AI Alchemist', xpNeeded: 450 },
-      { name: 'Systems Sage', xpNeeded: 700 },
-      { name: 'Chief Architect', xpNeeded: 1000 }
+      { name: 'Fresher', xpNeeded: 0 },
+      { name: 'Intern', xpNeeded: 100 },
+      { name: 'Associate', xpNeeded: 300 },
+      { name: 'Engineer', xpNeeded: 700 },
+      { name: 'Senior Engineer', xpNeeded: 1500 },
+      { name: 'Tech Lead', xpNeeded: 3000 },
+      { name: 'Architect', xpNeeded: 6000 },
+      { name: 'CTO Legend', xpNeeded: 12000 }
     ];
-    let currentRank = 'SDE Recruit';
+    let currentRank = 'Fresher';
     for (let i = RANKS.length - 1; i >= 0; i--) {
       if (student.xp >= RANKS[i].xpNeeded) {
         currentRank = RANKS[i].name;
