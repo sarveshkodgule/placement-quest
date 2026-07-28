@@ -11,6 +11,8 @@ import {
 const tycoonAudio = {
   ctx: null,
   masterGain: null,
+  bgmInterval: null,
+  bgmStep: 0,
   isEnabled: true,
 
   init() {
@@ -23,6 +25,52 @@ const tycoonAudio = {
       this.masterGain.connect(this.ctx.destination);
     } catch (e) {
       console.warn("Tycoon audio failed to load:", e);
+    }
+  },
+
+  playBgm() {
+    this.init();
+    if (!this.ctx || this.bgmInterval || !this.isEnabled) return;
+    
+    this.bgmStep = 0;
+    // Dreamy corporate arpeggios (Cmaj7 -> Fmaj7 -> Dm7 -> G7)
+    const chords = [
+      [261.63, 329.63, 392.00, 493.88], // Cmaj7
+      [349.23, 440.00, 523.25, 659.25], // Fmaj7
+      [293.66, 349.23, 440.00, 587.33], // Dm7
+      [392.00, 493.88, 587.33, 783.99]  // G7
+    ];
+
+    this.bgmInterval = setInterval(() => {
+      if (this.ctx.state === 'suspended') {
+        this.ctx.resume();
+        return;
+      }
+      const time = this.ctx.currentTime;
+      const currentChord = chords[Math.floor(this.bgmStep / 4) % chords.length];
+      const freq = currentChord[this.bgmStep % currentChord.length];
+
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, time);
+      gain.gain.setValueAtTime(0.04, time); // soft volume
+      gain.gain.linearRampToValueAtTime(0.001, time + 0.55);
+
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start(time);
+      osc.stop(time + 0.56);
+
+      this.bgmStep++;
+    }, 600); // Relaxing pace
+  },
+
+  stopBgm() {
+    if (this.bgmInterval) {
+      clearInterval(this.bgmInterval);
+      this.bgmInterval = null;
     }
   },
 
@@ -77,7 +125,7 @@ const TYCOON_LEVELS = [
 ];
 
 export default function ResumeBuilderTycoon() {
-  const { addCoins, addXP, setGame, completeDailyChallenge, triggerNotification } = usePlayerStore();
+  const { addCoins, addXP, setGame, completeDailyChallenge, triggerNotification, isMuted } = usePlayerStore();
 
   // Campaign State
   const [currentLevelIdx, setCurrentLevelIdx] = useState(0);
@@ -86,6 +134,24 @@ export default function ResumeBuilderTycoon() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [shakeActive, setShakeActive] = useState(false);
   const [confettiActive, setConfettiActive] = useState(false);
+
+  // Initialize BGM toggle
+  useEffect(() => {
+    tycoonAudio.isEnabled = soundEnabled && !isMuted;
+  }, [soundEnabled, isMuted]);
+
+  // Handle background music loop
+  useEffect(() => {
+    if (soundEnabled && !isMuted && activeScreen !== 'menu') {
+      tycoonAudio.isEnabled = true;
+      tycoonAudio.stopBgm();
+      tycoonAudio.playBgm();
+    } else {
+      tycoonAudio.stopBgm();
+    }
+    return () => tycoonAudio.stopBgm();
+  }, [soundEnabled, isMuted, activeScreen]);
+
 
   // Time & Semester System
   const [semester, setSemester] = useState(1); // Sem 1 -> Sem 3 -> Sem 4 (Placement)

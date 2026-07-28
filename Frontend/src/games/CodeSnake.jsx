@@ -27,6 +27,70 @@ const snakeAudio = {
     }
   },
 
+  playBgm() {
+    this.init();
+    if (!this.ctx || this.bgmInterval || !this.isEnabled) return;
+    
+    this.bgmStep = 0;
+    // Energetic retro-chiptune bassline (A minor -> F major -> C major -> G major)
+    const bassline = [
+      110.00, 110.00, 164.81, 110.00, // A2, E3
+      87.31, 87.31, 130.81, 87.31,   // F2, C3
+      130.81, 130.81, 196.00, 130.81, // C3, G3
+      98.00, 98.00, 146.83, 98.00     // G2, D3
+    ];
+    const leadMelody = [
+      440.00, 493.88, 523.25, 587.33,
+      349.23, 392.00, 440.00, 523.25,
+      523.25, 587.33, 659.25, 783.99,
+      392.00, 440.00, 493.88, 587.33
+    ];
+
+    this.bgmInterval = setInterval(() => {
+      if (this.ctx.state === 'suspended') {
+        this.ctx.resume();
+        return;
+      }
+      
+      const time = this.ctx.currentTime;
+
+      // Bass beat
+      const bassOsc = this.ctx.createOscillator();
+      const bassGain = this.ctx.createGain();
+      bassOsc.type = 'triangle';
+      bassOsc.frequency.setValueAtTime(bassline[this.bgmStep % bassline.length], time);
+      bassGain.gain.setValueAtTime(0.08, time);
+      bassGain.gain.linearRampToValueAtTime(0.001, time + 0.12);
+      bassOsc.connect(bassGain);
+      bassGain.connect(this.masterGain);
+      bassOsc.start(time);
+      bassOsc.stop(time + 0.13);
+
+      // Lead arpeggio on alternate beats
+      if (this.bgmStep % 2 === 0) {
+        const leadOsc = this.ctx.createOscillator();
+        const leadGain = this.ctx.createGain();
+        leadOsc.type = 'sine';
+        leadOsc.frequency.setValueAtTime(leadMelody[this.bgmStep % leadMelody.length], time);
+        leadGain.gain.setValueAtTime(0.03, time);
+        leadGain.gain.linearRampToValueAtTime(0.001, time + 0.08);
+        leadOsc.connect(leadGain);
+        leadGain.connect(this.masterGain);
+        leadOsc.start(time);
+        leadOsc.stop(time + 0.09);
+      }
+
+      this.bgmStep++;
+    }, 150); // fast retro tempo
+  },
+
+  stopBgm() {
+    if (this.bgmInterval) {
+      clearInterval(this.bgmInterval);
+      this.bgmInterval = null;
+    }
+  },
+
   playCollect() {
     this.init();
     if (!this.ctx || !this.isEnabled) return;
@@ -328,7 +392,7 @@ const LEVELS_POOL = [
 ];
 
 export default function CodeSnake() {
-  const { addCoins, addXP, setGame, triggerNotification } = usePlayerStore();
+  const { addCoins, addXP, setGame, triggerNotification, isMuted } = usePlayerStore();
 
   const [gameState, setGameState] = useState('menu'); // 'menu', 'playing', 'level_clear', 'gameover', 'victory'
   const [levelIdx, setLevelIdx] = useState(0);
@@ -369,8 +433,20 @@ export default function CodeSnake() {
 
   // Initialize chiptune toggle
   useEffect(() => {
-    snakeAudio.isEnabled = soundEnabled;
-  }, [soundEnabled]);
+    snakeAudio.isEnabled = soundEnabled && !isMuted;
+  }, [soundEnabled, isMuted]);
+
+  // Handle background music loop
+  useEffect(() => {
+    if (soundEnabled && !isMuted && gameState === 'playing') {
+      snakeAudio.isEnabled = true;
+      snakeAudio.stopBgm();
+      snakeAudio.playBgm();
+    } else {
+      snakeAudio.stopBgm();
+    }
+    return () => snakeAudio.stopBgm();
+  }, [soundEnabled, isMuted, gameState]);
 
   // Sync Timer Countdown
   useEffect(() => {
