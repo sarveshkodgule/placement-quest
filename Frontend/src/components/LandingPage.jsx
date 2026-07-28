@@ -84,6 +84,7 @@ export default function LandingPage() {
             gradYear: data.student.gradYear,
             rollNumber: data.student.rollNumber,
             clan: data.student.clan || '',
+            profileLoaded: true,
             activeGame: null // Enter the Hub
           });
         } else {
@@ -148,6 +149,7 @@ export default function LandingPage() {
           gradYear: data.student.gradYear,
           rollNumber: data.student.rollNumber,
           clan: data.student.clan || '',
+          profileLoaded: true,
           activeGame: null // Enter the Hub
         });
       } else {
@@ -193,6 +195,7 @@ export default function LandingPage() {
           gradYear: data.student.gradYear,
           rollNumber: data.student.rollNumber,
           clan: data.student.clan || '',
+          profileLoaded: true,
           activeGame: null // Enter the Hub
         });
         setVerificationRequired(false);

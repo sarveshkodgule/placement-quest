@@ -82,7 +82,8 @@ export default function App() {
             department: data.student.department,
             gradYear: data.student.gradYear,
             rollNumber: data.student.rollNumber,
-            clan: data.student.clan || ''
+            clan: data.student.clan || '',
+            profileLoaded: true
           });
         }
       })

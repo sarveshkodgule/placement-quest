@@ -64,7 +64,7 @@ export const getPlayerLevelInfo = (xpAmount) => {
 
 const syncProgressWithBackend = async (state) => {
   const token = localStorage.getItem('token');
-  if (!token) return;
+  if (!token || !state.profileLoaded) return;
 
   try {
     await fetch('http://localhost:5000/api/auth/progress', {
@@ -91,6 +91,7 @@ const syncProgressWithBackend = async (state) => {
 
 export const usePlayerStore = create((set, get) => ({
   // Player profile state
+  profileLoaded: false,
   name: 'Player 1',
   avatar: '🚀',
   rank: 'Fresher',
@@ -297,6 +298,7 @@ export const usePlayerStore = create((set, get) => ({
   resetGame: () => {
     localStorage.removeItem('token');
     set({
+      profileLoaded: false,
       rank: 'Fresher',
       xp: 0,
       coins: 200,
