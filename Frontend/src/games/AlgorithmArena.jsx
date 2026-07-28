@@ -419,6 +419,17 @@ function shuffleQuestionObj(qObj) {
   // Audio state
   const [isMuted, setIsMuted] = useState(false);
 
+  const speakText = (text) => {
+    if (isMuted) return;
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.pitch = 0.95;
+      utterance.rate = 1.05;
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {}
+  };
+
   // Refs for closure loops
   const canvasRef = useRef(null);
   const animationFrameId = useRef(null);
@@ -988,6 +999,7 @@ function shuffleQuestionObj(qObj) {
     setCombatText(`Defeat the ${activeMonster.name}! Choose correct answers to fire your lasers.`);
     loadQuestion(0);
     setBattleState('combat');
+    speakText(`Entering battle with the ${activeMonster.name}. Prepare your big-O complexity attacks!`);
   };
 
   // Load question info
@@ -1026,6 +1038,7 @@ function shuffleQuestionObj(qObj) {
     // Launch stone impact meteor
     stoneAnim.current = { active: true, x: 520, y: 110, speed: -10, angle: 0 };
     setCombatText(`⏰ TIME EXPIRED! The ${activeMonster.name} hurls a giant stone at your spaceship!`);
+    speakText("Time expired! Incoming stone attack!");
   };
 
   // Submit answer option selection
@@ -1042,6 +1055,7 @@ function shuffleQuestionObj(qObj) {
       laserAnim.current = { active: true, x: 95, y: 110, speed: 12 };
       if (!isMuted) playSpellSound();
       setCombatText(`✨ OPTIMAL COMPILE! Spaceship fires lasers dealing critical compilation damage!`);
+      speakText("Optimal compile! Laser fire!");
 
       // Prevent repeated questions by logging correct answer IDs to localStorage
       if (activeQuestion._id) {
@@ -1056,6 +1070,7 @@ function shuffleQuestionObj(qObj) {
       // Monster throws stone
       stoneAnim.current = { active: true, x: 520, y: 110, speed: -10, angle: 0 };
       setCombatText(`❌ SYNTAX ERROR! The ${activeMonster.name} throws a giant stone counter-attack.`);
+      speakText("Syntax error! Incoming stone!");
     }
   };
 
@@ -1074,6 +1089,7 @@ function shuffleQuestionObj(qObj) {
           playExplosionSound();
           playVictorySound();
         }
+        speakText(`Warning: ${activeMonster.name} has been defeated. Loot chest unlocked.`);
         if (localStorage.getItem('active_daily_challenge_game') === 'algo-arena') {
           completeDailyChallenge();
         }
@@ -1101,6 +1117,7 @@ function shuffleQuestionObj(qObj) {
       if (nextShields <= 0) {
         if (!isMuted) playDefeatSound();
         setBattleState('gameover');
+        speakText("Warning: Spaceship shields collapsed. Critical system failure.");
       } else {
         const nextQ = qIndex + 1;
         if (nextQ >= activeMonster.questions.length) {
@@ -1131,6 +1148,7 @@ function shuffleQuestionObj(qObj) {
     const nextIndex = levelIndex + 1;
     if (nextIndex >= monsters.length) {
       setBattleState('victory');
+      speakText("Congratulations! You cleared all sectors and claimed ultimate victory in the DSA Algorithm Arena!");
     } else {
       setLevelIndex(nextIndex);
       setBattleState('incoming'); // Direct player to incoming boss warning popup

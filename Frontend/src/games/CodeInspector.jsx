@@ -328,7 +328,7 @@ const SKINS = [
 ];
 
 export default function CodeInspector() {
-  const { coins, addCoins, addXP, setGame, rank, completeDailyChallenge, triggerNotification } = usePlayerStore();
+  const { coins, addCoins, addXP, setGame, rank, completeDailyChallenge, triggerNotification, isMuted } = usePlayerStore();
 
   // Screen State
   const [activeScreen, setActiveScreen] = useState('briefing'); // 'briefing', 'ide', 'victory', 'failed'
@@ -336,6 +336,17 @@ export default function CodeInspector() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [shakeActive, setShakeActive] = useState(false);
   const [confettiActive, setConfettiActive] = useState(false);
+
+  const speakText = (text) => {
+    if (isMuted || !soundEnabled) return;
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.pitch = 1.05; // Slightly higher pitch for advanced cockpit voice
+      utterance.rate = 1.05;
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {}
+  };
 
   // Dynamic missions data
   const [missions, setMissions] = useState(MISSIONS);
@@ -484,6 +495,7 @@ export default function CodeInspector() {
       inspectorAudio.init();
       inspectorAudio.playUpgrade();
     }
+    speakText(`Scanning system file ${mission.file}. Threat level: ${mission.threat}. Locate and patch the bug line.`);
   };
 
   // Ability Triggers
@@ -555,6 +567,9 @@ export default function CodeInspector() {
         if (nextShield <= 0) {
           setActiveScreen('failed');
           if (soundEnabled) inspectorAudio.playError();
+          speakText("Fatal compiler crash. CPU core overheated!");
+        } else {
+          speakText("Compiler warning. Healthy line compiled!");
         }
         return nextShield;
       });
@@ -615,6 +630,7 @@ export default function CodeInspector() {
       setTimeout(() => {
         setActiveScreen('victory');
         if (soundEnabled) inspectorAudio.playUpgrade();
+        speakText("Mission complete. Code bug eliminated successfully. PR merged!");
       }, 1000);
     } else {
       // Incorrect Fix compiled
@@ -627,6 +643,9 @@ export default function CodeInspector() {
         if (nextShield <= 0) {
           setActiveScreen('failed');
           if (soundEnabled) inspectorAudio.playError();
+          speakText("Fatal compiler crash. CPU core overheated!");
+        } else {
+          speakText("Syntax error. Compiler rejected the patch code!");
         }
         return nextShield;
       });

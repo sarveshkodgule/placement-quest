@@ -353,6 +353,17 @@ export default function SqlHeist() {
   const [unlockedClues, setUnlockedClues] = useState([]);
   const [isMuted, setIsMuted] = useState(false);
 
+  const speakText = (text) => {
+    if (isMuted) return;
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.pitch = 0.85; // Lower pitch for terminal system AI
+      utterance.rate = 1.05;
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {}
+  };
+
   // Level 10 Timer
   const [timeLeft, setTimeLeft] = useState(40);
   const [inTransaction, setInTransaction] = useState(false);
@@ -521,11 +532,13 @@ export default function SqlHeist() {
     setTerminalOutput([]);
     setBattleState('briefing');
     if (!isMuted) playKeyClick();
+    speakText(`Breach Case ${activeCase.level} loaded: ${activeCase.title}. Inspecting target database.`);
   };
 
   const startMission = () => {
     setBattleState('hacking');
     if (!isMuted) playKeyClick();
+    speakText("Hacking terminal active. Input your decryption query statement.");
   };
 
   // SQL Evaluator Compiler Simulator
@@ -692,6 +705,7 @@ export default function SqlHeist() {
         setVirtualDb(nextDb);
         setTerminalOutput(displayData);
         if (!isMuted) playExplosionSound();
+        speakText("Query executed successfully. Target decrypted!");
 
         // Mark as solved!
         if (activeCase._id) {
@@ -723,11 +737,13 @@ export default function SqlHeist() {
   const triggerFailure = (msg) => {
     setErrorMsg(msg);
     if (!isMuted) playAlarmSound();
+    speakText("Query check failed. Access denied!");
 
     setPlayerShields((prev) => {
       const next = Math.max(0, prev - 1);
       if (next <= 0) {
         setBattleState('gameover');
+        speakText("Firewall lockdown activated. Connection terminated.");
         addXP(10 * (levelIndex + 1)); // Partial XP on failure
       }
       return next;
@@ -741,6 +757,7 @@ export default function SqlHeist() {
       setBattleState('complete');
       addCoins(250);
       addXP(150);
+      speakText("Decryption complete! You have cleared all SQL database breach cases!");
       if (localStorage.getItem('active_daily_challenge_game') === 'sql-heist') {
         completeDailyChallenge();
       }
@@ -750,6 +767,7 @@ export default function SqlHeist() {
       setTerminalOutput([]);
       setErrorMsg(null);
       setBattleState('briefing');
+      speakText(`Moving to Breach Case ${nextIndex + 1}: ${casesList[nextIndex].title}.`);
     }
   };
 

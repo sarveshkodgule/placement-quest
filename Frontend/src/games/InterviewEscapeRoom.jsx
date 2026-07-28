@@ -326,7 +326,7 @@ const ESCAPE_LEVELS = [
 ];
 
 export default function InterviewEscapeRoom() {
-  const { coins, addCoins, addXP, setGame, completeDailyChallenge, triggerNotification } = usePlayerStore();
+  const { coins, addCoins, addXP, setGame, completeDailyChallenge, triggerNotification, isMuted } = usePlayerStore();
 
   // Campaign level selector states
   const [currentLevelIdx, setCurrentLevelIdx] = useState(0);
@@ -338,6 +338,17 @@ export default function InterviewEscapeRoom() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [shakeActive, setShakeActive] = useState(false);
   const [confettiActive, setConfettiActive] = useState(false);
+
+  const speakText = (text) => {
+    if (isMuted || !soundEnabled) return;
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.pitch = 1.0;
+      utterance.rate = 1.05;
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {}
+  };
 
   const decryptEscapeSolution = () => {
     if (coins < 50) {
@@ -480,6 +491,7 @@ export default function InterviewEscapeRoom() {
     setTimeout(() => {
       setActiveScreen(room);
       setIsZooming(false);
+      speakText(`Entering the ${room.toUpperCase()} chamber.`);
     }, 600);
   };
 
@@ -492,11 +504,13 @@ export default function InterviewEscapeRoom() {
       setVaultUnlocked(true);
       if (soundEnabled) escapeAudio.playDoorOpen();
       setCompletedRooms(prev => ({ ...prev, sql: true }));
+      speakText("Database decrypted. SQL lock deactivated!");
     } else {
       setShakeActive(true);
       setTimeout(() => setShakeActive(false), 500);
       if (soundEnabled) escapeAudio.playBeep(180, 0.3, 'sawtooth');
       triggerNotification('🚨 DATABASE REJECT', 'Query compilation failed. Security lockout active!', '❌');
+      speakText("Access denied. Query constraint error.");
     }
   };
 
@@ -506,12 +520,14 @@ export default function InterviewEscapeRoom() {
     if (idx === activeLevel.dsaChallenge.correctIndex) {
       setBridgeAnimationState('building');
       if (soundEnabled) escapeAudio.playDoorOpen();
+      speakText("Algorithmic assembly complete. Bridge building active.");
     } else {
       setShakeActive(true);
       setTimeout(() => setShakeActive(false), 500);
       setBridgeAnimationState('collapsed');
       if (soundEnabled) escapeAudio.playBridgeCollapse();
       triggerNotification('💥 BRIDGE COLLAPSED', 'Bubble Sort was too slow! Your spaceship fell into the chasm.', '❌');
+      speakText("Fatal complexity exception. Bridge collapsed!");
     }
   };
 
@@ -532,11 +548,13 @@ export default function InterviewEscapeRoom() {
         setEditingLine(null);
         if (soundEnabled) escapeAudio.playDoorOpen();
         setCompletedRooms(prev => ({ ...prev, coding: true }));
+        speakText("Syntax patched successfully. Robot core booted.");
       } else {
         setShakeActive(true);
         setTimeout(() => setShakeActive(false), 500);
         if (soundEnabled) escapeAudio.playBeep(180, 0.3, 'triangle');
         triggerNotification('🚨 SYNTAX ERROR', 'The robot logic rejected your patch code!', '❌');
+        speakText("Compile check failed. Patch code rejected.");
       }
     } else {
       setShakeActive(true);
@@ -544,6 +562,7 @@ export default function InterviewEscapeRoom() {
       if (soundEnabled) escapeAudio.playBeep(180, 0.3, 'triangle');
       triggerNotification('🚨 COMPILER OUTAGE', 'You edited a fully healthy system line!', '❌');
       setEditingLine(null);
+      speakText("Compiler warning. Healthy line compile crash.");
     }
   };
 
@@ -557,6 +576,7 @@ export default function InterviewEscapeRoom() {
     setRecruiterRelation(prev => Math.min(100, Math.max(0, prev + choice.value)));
     setDialogueText(choice.feedback);
     setCompletedRooms(prev => ({ ...prev, hr: true }));
+    speakText(choice.feedback);
   };
 
   // CEO evaluation
@@ -570,11 +590,13 @@ export default function InterviewEscapeRoom() {
       }
       setActiveScreen('victory');
       if (soundEnabled) escapeAudio.playBeep(659.25, 0.3); // E5 arpeggio
+      speakText("Congratulations! Your interview benchmarks are impressive. We extend an SDE offer letter!");
     } else {
       setShakeActive(true);
       setTimeout(() => setShakeActive(false), 500);
       setActiveScreen('failed');
       if (soundEnabled) escapeAudio.playBridgeCollapse();
+      speakText("We regret to inform you that your communication score does not meet our hiring targets.");
     }
   };
 
@@ -594,6 +616,7 @@ export default function InterviewEscapeRoom() {
     setConfettiActive(false);
 
     setActiveScreen('lobby');
+    speakText(`Entering Interview Room ${idx + 1}. Complete all tasks to unlock the exit door.`);
   };
 
   const handlePayoutClaim = () => {
