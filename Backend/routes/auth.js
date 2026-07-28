@@ -223,14 +223,22 @@ router.post('/forgot-password', async (req, res) => {
       student.resetPasswordOTPExpires = Date.now() + 10 * 60 * 1000; // 10 minutes expiry
       await student.save();
 
-      console.log('\n=========================================');
-      console.log(`🔑 [RESET PASSWORD OTP FOR ${email.toUpperCase()}]: ${otp}`);
-      console.log('=========================================\n');
+      // Send the code via email
+      try {
+        const sendEmail = require('../utils/sendEmail');
+        await sendEmail({
+          email: student.email,
+          subject: '🎮 Placement Quest - Password Reset Verification Code',
+          otp
+        });
+      } catch (err) {
+        console.error('Error sending email:', err);
+      }
 
       return res.json({ 
         success: true, 
         otpSent: true, 
-        message: `Verification code sent to your email! (Local Sim Code: ${otp})` 
+        message: `Verification code sent to your email! (Local Sim Code also logged on console)` 
       });
     }
 
