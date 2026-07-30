@@ -67,26 +67,8 @@ export default function LandingPage() {
             return;
           }
           localStorage.setItem('token', data.token);
-          usePlayerStore.setState({ 
-            name: data.student.name, 
-            avatar: data.student.avatar,
-            rank: data.student.rank,
-            xp: data.student.xp,
-            coins: data.student.coins,
-            streak: data.student.streak,
-            classType: data.student.classType,
-            unlockedSkills: data.student.unlockedSkills,
-            heistLevelsCompleted: data.student.heistLevelsCompleted,
-            aptiHighScore: data.student.aptiHighScore,
-            email: data.student.email,
-            collegeName: data.student.collegeName,
-            department: data.student.department,
-            gradYear: data.student.gradYear,
-            rollNumber: data.student.rollNumber,
-            clan: data.student.clan || '',
-            profileLoaded: true,
-            activeGame: null // Enter the Hub
-          });
+          usePlayerStore.getState().mergeAndSyncProfile(data.student);
+          usePlayerStore.setState({ activeGame: null }); // Enter the Hub
         } else {
           alert(`⚠️ Login Failed: ${data.message}`);
         }
@@ -132,26 +114,8 @@ export default function LandingPage() {
 
       if (data.success) {
         localStorage.setItem('token', data.token);
-        usePlayerStore.setState({ 
-          name: data.student.name, 
-          avatar: data.student.avatar,
-          rank: data.student.rank,
-          xp: data.student.xp,
-          coins: data.student.coins,
-          streak: data.student.streak,
-          classType: data.student.classType,
-          unlockedSkills: data.student.unlockedSkills,
-          heistLevelsCompleted: data.student.heistLevelsCompleted,
-          aptiHighScore: data.student.aptiHighScore,
-          email: data.student.email,
-          collegeName: data.student.collegeName,
-          department: data.student.department,
-          gradYear: data.student.gradYear,
-          rollNumber: data.student.rollNumber,
-          clan: data.student.clan || '',
-          profileLoaded: true,
-          activeGame: null // Enter the Hub
-        });
+        usePlayerStore.getState().mergeAndSyncProfile(data.student);
+        usePlayerStore.setState({ activeGame: null }); // Enter the Hub
       } else {
         alert(`⚠️ Registration Failed: ${data.message || data.error || 'Unknown server error'}`);
       }
@@ -178,26 +142,8 @@ export default function LandingPage() {
       
       if (data.success) {
         localStorage.setItem('token', data.token);
-        usePlayerStore.setState({ 
-          name: data.student.name, 
-          avatar: data.student.avatar,
-          rank: data.student.rank,
-          xp: data.student.xp,
-          coins: data.student.coins,
-          streak: data.student.streak,
-          classType: data.student.classType,
-          unlockedSkills: data.student.unlockedSkills,
-          heistLevelsCompleted: data.student.heistLevelsCompleted,
-          aptiHighScore: data.student.aptiHighScore,
-          email: data.student.email,
-          collegeName: data.student.collegeName,
-          department: data.student.department,
-          gradYear: data.student.gradYear,
-          rollNumber: data.student.rollNumber,
-          clan: data.student.clan || '',
-          profileLoaded: true,
-          activeGame: null // Enter the Hub
-        });
+        usePlayerStore.getState().mergeAndSyncProfile(data.student);
+        usePlayerStore.setState({ activeGame: null }); // Enter the Hub
         setVerificationRequired(false);
         setVerifyRollNumberInput('');
         setModalActive(false);

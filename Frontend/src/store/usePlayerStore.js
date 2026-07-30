@@ -295,6 +295,51 @@ export const usePlayerStore = create((set, get) => ({
     }
   },
 
+  mergeAndSyncProfile: (studentData) => {
+    const current = get();
+    const mergedXp = Math.max(current.xp, studentData.xp || 0);
+    const mergedCoins = Math.max(current.coins, studentData.coins || 0);
+    const mergedHeist = Math.max(current.heistLevelsCompleted, studentData.heistLevelsCompleted || 0);
+    const mergedApti = Math.max(current.aptiHighScore, studentData.aptiHighScore || 0);
+    const mergedSkills = Array.from(new Set([...(current.unlockedSkills || []), ...(studentData.unlockedSkills || [])]));
+    const mergedClass = studentData.classType || current.classType;
+
+    let currentRank = studentData.rank || 'Fresher';
+    for (let i = RANKS.length - 1; i >= 0; i--) {
+      if (mergedXp >= RANKS[i].xpNeeded) {
+        currentRank = RANKS[i].name;
+        break;
+      }
+    }
+
+    const updatedState = {
+      name: studentData.name,
+      avatar: studentData.avatar,
+      rank: currentRank,
+      xp: mergedXp,
+      coins: mergedCoins,
+      streak: studentData.streak,
+      classType: mergedClass,
+      unlockedSkills: mergedSkills,
+      heistLevelsCompleted: mergedHeist,
+      aptiHighScore: mergedApti,
+      email: studentData.email,
+      collegeName: studentData.collegeName,
+      department: studentData.department,
+      gradYear: studentData.gradYear,
+      rollNumber: studentData.rollNumber,
+      clan: studentData.clan || '',
+      profileLoaded: true
+    };
+
+    set(updatedState);
+    
+    syncProgressWithBackend({
+      ...get(),
+      ...updatedState
+    });
+  },
+
   resetGame: () => {
     localStorage.removeItem('token');
     set({
