@@ -498,7 +498,9 @@ export default function AptitudeDistrict() {
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [selectedOpt, setSelectedOpt] = useState(null);
   const [isCorrect, setIsCorrect] = useState(null);
-  const [timeLeft, setTimeLeft] = useState(12);
+  const [timeLeft, setTimeLeft] = useState(25);
+  const [baseTime, setBaseTime] = useState(25);
+  const [maxTime, setMaxTime] = useState(25);
   const [combo, setCombo] = useState(0);
   const [maxCombo, setMaxCombo] = useState(0);
   const [score, setScore] = useState(0);
@@ -662,8 +664,28 @@ export default function AptitudeDistrict() {
     
     // Initialize seen pool for this run
     setUsedDbIds([]);
-    setCurrentQuestion(fetchNextAptiQuestion([]));
-    setTimeLeft(12);
+    const firstQ = fetchNextAptiQuestion([]);
+    setCurrentQuestion(firstQ);
+
+    const initialBase = 25;
+    const isHeavy = 
+      firstQ.category === 'PERMUTATION & PROBABILITY' || 
+      firstQ.category === 'PROFIT & LOSS' ||
+      firstQ.category === 'QUANTITATIVE' ||
+      firstQ.category === 'LOGICAL' ||
+      (firstQ.text && (
+        firstQ.text.toLowerCase().includes('percent') || 
+        firstQ.text.toLowerCase().includes('days') || 
+        firstQ.text.toLowerCase().includes('train') || 
+        firstQ.text.toLowerCase().includes('work') ||
+        firstQ.text.toLowerCase().includes('speed')
+      ));
+    
+    const initialMax = isHeavy ? initialBase + 10 : initialBase;
+
+    setBaseTime(initialBase);
+    setMaxTime(initialMax);
+    setTimeLeft(initialMax);
 
     // Reset daily challenge tracking in state for this run
     setDailyChallenges(prev => prev.map(c => ({ ...c, current: 0 })));
@@ -767,15 +789,37 @@ export default function AptitudeDistrict() {
       return;
     }
 
-    // Check if the previous answer was correct to grant +4s Hyperboost time bonus!
-    const baseWaveTime = Math.max(6, 12 - Math.floor(qIndex / 5));
-    const finalTime = isCorrect ? baseWaveTime + 4 : baseWaveTime;
+    const nextQ = fetchNextAptiQuestion();
+    const nextBase = Math.max(15, 25 - Math.floor(qIndex / 4));
+    
+    const isHeavy = 
+      nextQ.category === 'PERMUTATION & PROBABILITY' || 
+      nextQ.category === 'PROFIT & LOSS' ||
+      nextQ.category === 'QUANTITATIVE' ||
+      nextQ.category === 'LOGICAL' ||
+      (nextQ.text && (
+        nextQ.text.toLowerCase().includes('percent') || 
+        nextQ.text.toLowerCase().includes('days') || 
+        nextQ.text.toLowerCase().includes('train') || 
+        nextQ.text.toLowerCase().includes('work') ||
+        nextQ.text.toLowerCase().includes('speed')
+      ));
+
+    let nextMax = nextBase;
+    if (isHeavy) {
+      nextMax += 10;
+    }
+    if (isCorrect) {
+      nextMax += 4;
+    }
 
     setSelectedOpt(null);
     setIsCorrect(null);
     setQIndex(prev => prev + 1);
-    setCurrentQuestion(fetchNextAptiQuestion());
-    setTimeLeft(finalTime);
+    setCurrentQuestion(nextQ);
+    setBaseTime(nextBase);
+    setMaxTime(nextMax);
+    setTimeLeft(nextMax);
     setGameState('playing');
   };
 
@@ -1582,8 +1626,8 @@ export default function AptitudeDistrict() {
     };
   }, [gameState, currentSkinId]);
 
-  const baseWaveTime = Math.max(6, 12 - Math.floor(qIndex / 5));
-  const maxWaveTime = timeLeft > baseWaveTime ? baseWaveTime + 4 : baseWaveTime;
+  const baseWaveTime = baseTime;
+  const maxWaveTime = maxTime;
 
   return (
     <div style={styles.container} className={shake ? 'shake-animation' : ''}>

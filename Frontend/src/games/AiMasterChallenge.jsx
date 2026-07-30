@@ -496,12 +496,17 @@ export default function AiMasterChallenge() {
 // Helper to dynamically shuffle options and update correct answer index
 function shuffleQuestionObj(qObj) {
   if (!qObj || !qObj.opts) return qObj;
-  const originalCorrectText = qObj.opts[qObj.correct];
-  const shuffledOpts = [...qObj.opts].sort(() => Math.random() - 0.5);
-  const newCorrectIndex = shuffledOpts.indexOf(originalCorrectText);
+  const originalCorrectTextClean = qObj.opts[qObj.correct].replace(/^[A-D]:\s*/i, '');
+  const cleanedOpts = qObj.opts.map(opt => opt.replace(/^[A-D]:\s*/i, ''));
+  
+  const shuffledOpts = [...cleanedOpts].sort(() => Math.random() - 0.5);
+  const newCorrectIndex = shuffledOpts.indexOf(originalCorrectTextClean);
+  
+  const prefixOpts = shuffledOpts.map((opt, idx) => `${['A', 'B', 'C', 'D'][idx]}: ${opt}`);
+  
   return {
     ...qObj,
-    opts: shuffledOpts,
+    opts: prefixOpts,
     correct: newCorrectIndex
   };
 }

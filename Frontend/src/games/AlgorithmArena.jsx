@@ -415,6 +415,7 @@ function shuffleQuestionObj(qObj) {
   const [isAnswerCorrect, setIsAnswerCorrect] = useState(null);
   const [timeLeft, setTimeLeft] = useState(20);
   const [isAnswering, setIsAnswering] = useState(true);
+  const [seenQuestionIds, setSeenQuestionIds] = useState([]);
 
   // Audio state
   const [isMuted, setIsMuted] = useState(false);
@@ -988,6 +989,81 @@ function shuffleQuestionObj(qObj) {
     return () => stopBgm();
   }, [isMuted]);
 
+  const generateProceduralDsaQuestion = (topic) => {
+    const fallbacks = {
+      array: [
+        { q: "What is the space complexity of merging two sorted arrays of sizes N and M into a new array?", opts: ["O(1)", "O(N + M)", "O(N log M)", "O(N * M)"], correct: 1, tip: "Storing the merged elements takes space proportional to both inputs." },
+        { q: "Which operation on a dynamic array has an O(N) amortized worst-case complexity?", opts: ["Access by index", "Insert at beginning", "Insert at end", "Update element"], correct: 1, tip: "Inserting at the beginning requires shifting all N elements to the right." },
+        { q: "What is the time complexity of searching a sorted array using Binary Search?", opts: ["O(1)", "O(log N)", "O(N)", "O(N log N)"], correct: 1, tip: "Binary Search halves the search space each step, running in O(log N)." }
+      ],
+      string: [
+        { q: "What is the space complexity of generating all substrings of a string of length N?", opts: ["O(1)", "O(N)", "O(N²)", "O(2^N)"], correct: 2, tip: "There are N*(N+1)/2 substrings, requiring O(N²) space to store." },
+        { q: "Which string search algorithm uses hashing to check pattern matches in O(N + M) average time?", opts: ["Naive", "KMP", "Rabin-Karp", "Boyer-Moore"], correct: 2, tip: "Rabin-Karp uses a rolling hash function to search strings in linear time." }
+      ],
+      stackqueue: [
+        { q: "Which data structure is best suited for implementing a Breadth-First Search (BFS) traversal?", opts: ["Stack", "Queue", "Binary Tree", "Heap"], correct: 1, tip: "BFS visits nodes level by level using a FIFO Queue." },
+        { q: "What is the time complexity to pop an element from a stack implemented using a singly linked list?", opts: ["O(1)", "O(log N)", "O(N)", "O(N log N)"], correct: 0, tip: "Popping from the head of a linked list is a constant O(1) time operation." }
+      ],
+      hash: [
+        { q: "What is the worst-case search complexity of a hash table with poor hash distribution (all keys collide)?", opts: ["O(1)", "O(log N)", "O(N)", "O(N²)"], correct: 2, tip: "If all keys collide into a single chain, search degrades to O(N) linear search." }
+      ],
+      tree: [
+        { q: "What is the height of a perfectly balanced Binary Tree with N nodes?", opts: ["O(1)", "O(log N)", "O(N)", "O(N log N)"], correct: 1, tip: "A balanced binary tree has a height of log2(N)." }
+      ],
+      graph: [
+        { q: "Which algorithm finds the single-source shortest path in a graph with non-negative edge weights?", opts: ["Kruskal", "Prim", "Dijkstra", "Bellman-Ford"], correct: 2, tip: "Dijkstra's algorithm is optimal for non-negative weighted graphs." }
+      ],
+      backtrack: [
+        { q: "What is the time complexity of solving the N-Queens problem using backtracking?", opts: ["O(N)", "O(N²)", "O(N!)", "O(2^N)"], correct: 2, tip: "Backtracking explores all board permutations, leading to O(N!) worst-case." }
+      ]
+    };
+
+    const pool = fallbacks[topic] || fallbacks.array;
+    const selected = pool[Math.floor(Math.random() * pool.length)];
+    return shuffleQuestionObj({
+      q: selected.q,
+      opts: selected.opts,
+      correct: selected.correct,
+      tip: selected.tip,
+      _id: "procedural-" + Math.random().toString(36).substr(2, 9)
+    });
+  };
+
+  const loadNextUniqueQuestion = (currentIndex) => {
+    let foundIdx = -1;
+    for (let i = currentIndex + 1; i < activeMonster.questions.length; i++) {
+      const q = activeMonster.questions[i];
+      const qIdentifier = q._id || q.q;
+      if (!seenQuestionIds.includes(qIdentifier)) {
+        foundIdx = i;
+        break;
+      }
+    }
+    
+    if (foundIdx === -1) {
+      for (let i = 0; i < currentIndex; i++) {
+        const q = activeMonster.questions[i];
+        const qIdentifier = q._id || q.q;
+        if (!seenQuestionIds.includes(qIdentifier)) {
+          foundIdx = i;
+          break;
+        }
+      }
+    }
+
+    if (foundIdx !== -1) {
+      setQIndex(foundIdx);
+      loadQuestion(foundIdx);
+    } else {
+      const fallbackQ = generateProceduralDsaQuestion(activeMonster.type);
+      setActiveQuestion(fallbackQ);
+      setSelectedOpt(null);
+      setIsAnswerCorrect(null);
+      setTimeLeft(activeMonster.timeLimit);
+      setIsAnswering(true);
+    }
+  };
+
   // Launch Fight State
   const startCombat = () => {
     monsterHpRef.current = activeMonster.maxHp;
@@ -995,6 +1071,7 @@ function shuffleQuestionObj(qObj) {
     setMonsterHp(activeMonster.maxHp);
     setPlayerShields(3);
     setQIndex(0);
+    setSeenQuestionIds([]);
     setConfettiActive(false);
     setCombatText(`Defeat the ${activeMonster.name}! Choose correct answers to fire your lasers.`);
     loadQuestion(0);
@@ -1035,6 +1112,10 @@ function shuffleQuestionObj(qObj) {
     setSelectedOpt(-1);
     setIsAnswerCorrect(false);
 
+    // Add current question to seen pool
+    const qIdentifier = activeQuestion._id || activeQuestion.q;
+    setSeenQuestionIds(prev => [...prev, qIdentifier]);
+
     // Launch stone impact meteor
     stoneAnim.current = { active: true, x: 520, y: 110, speed: -10, angle: 0 };
     setCombatText(`⏰ TIME EXPIRED! The ${activeMonster.name} hurls a giant stone at your spaceship!`);
@@ -1049,6 +1130,10 @@ function shuffleQuestionObj(qObj) {
 
     const isCorrect = optIdx === activeQuestion.correct;
     setIsAnswerCorrect(isCorrect);
+
+    // Add current question to seen pool
+    const qIdentifier = activeQuestion._id || activeQuestion.q;
+    setSeenQuestionIds(prev => [...prev, qIdentifier]);
 
     if (isCorrect) {
       // Spaceship fires laser
@@ -1081,7 +1166,6 @@ function shuffleQuestionObj(qObj) {
     setMonsterHp(nextHp);
 
     setTimeout(() => {
-      const nextQ = qIndex + 1;
       if (nextHp <= 0) {
         // Boss is defeated!
         setConfettiActive(true);
@@ -1094,13 +1178,8 @@ function shuffleQuestionObj(qObj) {
           completeDailyChallenge();
         }
         setBattleState('loot');
-      } else if (nextQ >= activeMonster.questions.length) {
-        // Out of questions but boss still alive: loop questions!
-        setQIndex(0);
-        loadQuestion(0);
       } else {
-        setQIndex(nextQ);
-        loadQuestion(nextQ);
+        loadNextUniqueQuestion(qIndex);
       }
     }, 1200);
   };
@@ -1119,15 +1198,7 @@ function shuffleQuestionObj(qObj) {
         setBattleState('gameover');
         speakText("Warning: Spaceship shields collapsed. Critical system failure.");
       } else {
-        const nextQ = qIndex + 1;
-        if (nextQ >= activeMonster.questions.length) {
-          // Out of questions but user still has shields: loop questions!
-          setQIndex(0);
-          loadQuestion(0);
-        } else {
-          setQIndex(nextQ);
-          loadQuestion(nextQ);
-        }
+        loadNextUniqueQuestion(qIndex);
       }
     }, 1200);
   };
