@@ -810,7 +810,7 @@ export default function AptitudeDistrict() {
       nextMax += 10;
     }
     if (isCorrect) {
-      nextMax += 4;
+      nextMax += 8; // Boost by +8 seconds on correct answer!
     }
 
     setSelectedOpt(null);
@@ -1789,7 +1789,7 @@ export default function AptitudeDistrict() {
                   fontFamily: 'var(--font-mono)',
                   color: timeLeft > baseWaveTime ? 'var(--success-color)' : 'var(--text-primary)'
                 }}>
-                  {timeLeft}s {timeLeft > baseWaveTime && '(+4s Boost!)'}
+                  {timeLeft}s {timeLeft > baseWaveTime && `(+${maxWaveTime - baseWaveTime}s Boost!)`}
                 </span>
                 <div style={styles.timerTrack}>
                   <div style={{ 

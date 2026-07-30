@@ -132,6 +132,7 @@ export default function ProfilePage() {
   };
 
   const [leaderboard, setLeaderboard] = React.useState([]);
+  const [leaderboardExpanded, setLeaderboardExpanded] = React.useState(false);
 
   React.useEffect(() => {
     const fetchLeaderboardData = () => {
@@ -401,7 +402,7 @@ export default function ProfilePage() {
           <div className="game-card" style={styles.leaderboardCard}>
             <h3 style={styles.panelTitle}>🏆 CAMPUS LEADERBOARD</h3>
             <div style={styles.leaderboardList}>
-              {leaderboard.map((player, idx) => {
+              {leaderboard.slice(0, leaderboardExpanded ? leaderboard.length : 3).map((player, idx) => {
                 const isTop = idx === 0;
                 return (
                   <div 
@@ -428,6 +429,14 @@ export default function ProfilePage() {
                 );
               })}
             </div>
+            {leaderboard.length > 3 && (
+              <button 
+                style={styles.viewStandingsBtn} 
+                onClick={() => setLeaderboardExpanded(!leaderboardExpanded)}
+              >
+                {leaderboardExpanded ? 'Show Top 3 Standings ▲' : '🏆 View Overall Standings ▼'}
+              </button>
+            )}
           </div>
 
           {/* Clans / Developer Guilds Card */}
@@ -750,6 +759,20 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     overflowY: 'auto'
+  },
+  viewStandingsBtn: {
+    backgroundColor: 'rgba(0, 243, 255, 0.08)',
+    border: '1px dashed rgba(0, 243, 255, 0.3)',
+    color: '#00F3FF',
+    padding: '0.4rem 0.8rem',
+    borderRadius: '6px',
+    fontSize: '0.75rem',
+    fontWeight: 'bold',
+    cursor: 'pointer',
+    marginTop: '12px',
+    width: '100%',
+    textAlign: 'center',
+    transition: 'all 0.25s ease',
   },
   leaderboardList: {
     display: 'flex',
