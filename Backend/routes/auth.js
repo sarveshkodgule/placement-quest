@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const Student = require('../models/Student');
-const { protect } = require('../middleware/auth');
+const { protect, blacklistToken } = require('../middleware/auth');
+const { validatePasswordStrength } = require('../utils/validator');
 
 // Generate JWT Helper
 const generateToken = (id) => {
@@ -17,6 +18,11 @@ const generateToken = (id) => {
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password, avatar, collegeName, department, gradYear, rollNumber } = req.body;
+
+    const passwordError = validatePasswordStrength(password);
+    if (passwordError) {
+      return res.status(400).json({ success: false, message: passwordError });
+    }
 
     const studentExists = await Student.findOne({ email });
     if (studentExists) {
@@ -255,6 +261,11 @@ router.post('/forgot-password', async (req, res) => {
       return res.status(400).json({ success: false, message: 'New password is required to complete reset' });
     }
 
+    const passwordError = validatePasswordStrength(newPassword);
+    if (passwordError) {
+      return res.status(400).json({ success: false, message: passwordError });
+    }
+
     student.password = newPassword;
     student.resetPasswordOTP = null;
     student.resetPasswordOTPExpires = null;
@@ -263,6 +274,19 @@ router.post('/forgot-password', async (req, res) => {
     res.json({ success: true, message: 'Password reset successful!' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// @route   POST /api/auth/logout
+// @desc    Invalidate token session (Blacklist JWT)
+// @access  Private
+router.post('/logout', protect, (req, res) => {
+  try {
+    const token = req.headers.authorization.split(' ')[1];
+    blacklistToken(token);
+    res.json({ success: true, message: 'Session successfully logged out and token invalidated.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to clear session.' });
   }
 });
 

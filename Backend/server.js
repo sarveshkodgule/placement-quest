@@ -4,6 +4,8 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { connectDB, closeDB } = require('./config/db');
+const { auditLogger } = require('./middleware/audit');
+const { querySanitizer } = require('./middleware/sanitize');
 
 // Connect to MongoDB & Auto-Seed Questions
 connectDB().then(async () => {
@@ -28,6 +30,10 @@ const app = express();
 
 // 1. Security Headers Configuration (XSS protection, MIME checks)
 app.use(helmet());
+
+// 1b. Central Audit logging & NoSQL sanitization filters
+app.use(auditLogger);
+app.use(querySanitizer);
 
 // 2. CORS Locking (Allows localhost and wildcard options safely)
 app.use(cors({
