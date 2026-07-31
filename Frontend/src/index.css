@@ -43,23 +43,23 @@ html {
 
 /* Theme Overrides */
 
-/* 1. Landing Page - Elegant Light Mode / Edtech Portal */
+/* 1. Landing Page - Premium Dark Cyberpunk Mode */
 .theme-landing {
-  --bg-primary: #F8FAFC;
-  --bg-secondary: #FFFFFF;
-  --bg-tertiary: #F1F5F9;
-  --text-primary: #0F172A;
-  --text-secondary: #64748B;
-  --accent-color: #6366F1; /* Premium Indigo */
-  --accent-secondary: #0EA5E9; /* Sky Blue */
+  --bg-primary: #06080C;
+  --bg-secondary: #0F121C;
+  --bg-tertiary: #151B2A;
+  --text-primary: #F8FAFC;
+  --text-secondary: #8A99AD;
+  --accent-color: #00F3FF; /* Neon Cyan */
+  --accent-secondary: #8B5CF6; /* Violet */
   --success-color: #10B981;
   --warning-color: #F59E0B;
-  --border-color: rgba(15, 23, 42, 0.08);
-  --shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
-  --grid-line: rgba(15, 23, 42, 0.04);
-  --glow-accent: 0 4px 20px rgba(99, 102, 241, 0.15);
-  --glow-secondary: 0 4px 20px rgba(14, 165, 233, 0.15);
-  --font-title: 'Outfit', sans-serif;
+  --border-color: rgba(255, 255, 255, 0.06);
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --grid-line: rgba(0, 243, 255, 0.02);
+  --glow-accent: 0 0 20px rgba(0, 243, 255, 0.3);
+  --glow-secondary: 0 0 20px rgba(139, 92, 246, 0.3);
+  --font-title: 'Orbitron', sans-serif;
 }
 
 /* 2. Career Tower (Skill Tree) - Sleek Tech Grid */

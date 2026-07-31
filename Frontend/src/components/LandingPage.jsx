@@ -238,7 +238,7 @@ export default function LandingPage() {
       </nav>
 
       {/* 2. HERO SECTION */}
-      <section style={styles.heroSection}>
+      <section style={styles.heroSection} className="grid-overlay">
         <div style={styles.heroTextContainer}>
           <div style={styles.heroBadge}>✨ Gamified Learning Platform</div>
           <h1 style={styles.heroHeading}>Master Engineering Placements Through Gameplay</h1>
@@ -754,7 +754,8 @@ const styles = {
   },
   navbar: {
     height: '80px',
-    backgroundColor: 'var(--bg-secondary)',
+    backgroundColor: 'rgba(6, 8, 12, 0.75)',
+    backdropFilter: 'blur(12px)',
     borderBottom: '1px solid var(--border-color)',
     padding: '0 4rem',
     display: 'flex',
@@ -825,18 +826,22 @@ const styles = {
     gap: '1.5rem',
   },
   heroBadge: {
-    backgroundColor: 'rgba(99, 102, 241, 0.08)',
-    border: '1px solid rgba(99, 102, 241, 0.15)',
+    backgroundColor: 'rgba(0, 243, 255, 0.08)',
+    border: '1px solid rgba(0, 243, 255, 0.25)',
     color: 'var(--accent-color)',
     fontSize: '0.75rem',
     fontWeight: '700',
     padding: '6px 14px',
     borderRadius: '9999px',
+    boxShadow: '0 0 10px rgba(0, 243, 255, 0.1)',
   },
   heroHeading: {
     fontSize: '3.25rem',
     fontWeight: '800',
     lineHeight: '1.15',
+    backgroundImage: 'linear-gradient(135deg, var(--accent-color) 0%, var(--accent-secondary) 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
     color: 'var(--text-primary)',
   },
   heroSubheading: {
@@ -865,22 +870,22 @@ const styles = {
     width: '100%',
     maxWidth: '380px',
     padding: '2rem',
-    backgroundColor: '#0D1117', /* Dark mockup inside light landing */
-    color: '#F0F6FC',
+    backgroundColor: 'var(--bg-secondary)',
+    color: 'var(--text-primary)',
     borderRadius: '16px',
-    border: '1px solid rgba(255,255,255,0.05)',
-    boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
+    border: '1px solid rgba(0, 243, 255, 0.25)',
+    boxShadow: '0 10px 40px rgba(0, 243, 255, 0.15)',
   },
   mockTitle: {
     fontFamily: 'var(--font-title)',
     fontSize: '1.1rem',
     marginBottom: '4px',
     letterSpacing: '1px',
-    color: '#06B6D4',
+    color: 'var(--accent-color)',
   },
   mockDesc: {
     fontSize: '0.8rem',
-    color: '#8B949E',
+    color: 'var(--text-secondary)',
     lineHeight: '1.4',
     marginBottom: '1.5rem',
   },
@@ -900,7 +905,7 @@ const styles = {
   mockProgressBarFill: {
     height: '100%',
     width: '35%',
-    background: 'linear-gradient(90deg, #A855F7, #06B6D4)',
+    background: 'linear-gradient(90deg, var(--accent-color), var(--accent-secondary))',
   },
   featuresSection: {
     maxWidth: '1200px',
@@ -1044,8 +1049,8 @@ const styles = {
     left: 0,
     width: '100vw',
     height: '100vh',
-    backgroundColor: 'rgba(15, 23, 42, 0.5)',
-    backdropFilter: 'blur(6px)',
+    backgroundColor: 'rgba(5, 7, 12, 0.75)',
+    backdropFilter: 'blur(12px)',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
@@ -1056,10 +1061,10 @@ const styles = {
     width: '100%',
     padding: '2.5rem 2rem',
     backgroundColor: 'var(--bg-secondary)',
-    border: '1px solid var(--border-color)',
+    border: '1px solid var(--accent-color)',
     borderRadius: '16px',
     position: 'relative',
-    boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
+    boxShadow: '0 20px 40px rgba(0, 243, 255, 0.2)',
   },
   closeBtn: {
     position: 'absolute',
