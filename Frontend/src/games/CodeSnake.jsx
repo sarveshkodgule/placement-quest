@@ -561,17 +561,18 @@ export default function CodeSnake() {
     // Track occupied positions starting with the snake body
     const occupied = [...snakeRef.current];
 
-    // Spawn correct tokens
-    lvl.required.forEach((tokenVal) => {
+    // Spawn first correct token ONLY!
+    if (lvl.required && lvl.required.length > 0) {
+      const firstTokenVal = lvl.required[0];
       const coord = getUniqueRandomCoordinates(occupied);
       occupied.push(coord);
       tokensRef.current.push({
         x: coord.x,
         y: coord.y,
-        value: tokenVal,
+        value: firstTokenVal,
         isCorrect: true
       });
-    });
+    }
 
     // Spawn wrong syntax tokens
     lvl.wrongs.forEach((wrongVal) => {
@@ -715,32 +716,43 @@ export default function CodeSnake() {
           if (soundEnabled) snakeAudio.playCollect();
           spawnExplosion(token.x, token.y, '#10B981');
           
-          setCollectedTokens((prev) => {
-            const nextList = [...prev, token.value];
-            
-            // Check if level goals achieved (since we must pick in sequence, nextList length reaching activeLevel.required.length means all are collected in order)
-            const requiredCollected = nextList.length === activeLevel.required.length;
-            if (requiredCollected) {
-              if (activeLevel.isBoss) {
-                // Damage boss
-                setBossHp((prevHp) => {
-                  const nextHp = prevHp - 1;
-                  if (soundEnabled) snakeAudio.playBossHit();
-                  if (nextHp <= 0) {
-                    handleVictory();
-                  } else {
-                    triggerNotification('💥 Boss Damaged!', `SQL Injector Boss HP at ${nextHp}/5!`, '👾');
-                    // Respawn round
-                    spawnInitialElements(activeLevel);
-                  }
-                  return nextHp;
-                });
-              } else {
-                handleLevelClear();
-              }
+          const newCollected = [...collectedTokens, token.value];
+          setCollectedTokens(newCollected);
+
+          // Check if level goals achieved
+          const requiredCollected = newCollected.length === activeLevel.required.length;
+          if (requiredCollected) {
+            if (activeLevel.isBoss) {
+              setBossHp((prevHp) => {
+                const nextHp = prevHp - 1;
+                if (soundEnabled) snakeAudio.playBossHit();
+                if (nextHp <= 0) {
+                  handleVictory();
+                } else {
+                  triggerNotification('💥 Boss Damaged!', `SQL Injector Boss HP at ${nextHp}/5!`, '👾');
+                  // Reset collected tokens and respawn initial elements of the round
+                  setCollectedTokens([]);
+                  spawnInitialElements(activeLevel);
+                }
+                return nextHp;
+              });
+            } else {
+              handleLevelClear();
             }
-            return nextList;
-          });
+          } else {
+            // Spawn the NEXT correct token immediately!
+            const nextTokenVal = activeLevel.required[newCollected.length];
+            if (nextTokenVal) {
+              const occupied = [...snake, ...tokensRef.current, ...enemiesRef.current, ...powerUpsRef.current];
+              const coord = getUniqueRandomCoordinates(occupied);
+              tokensRef.current.push({
+                x: coord.x,
+                y: coord.y,
+                value: nextTokenVal,
+                isCorrect: true
+              });
+            }
+          }
 
           setScore((s) => s + 10 * combo);
           setCombo((c) => Math.min(10, c + 1));
