@@ -64,6 +64,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/leaderboard', require('./routes/leaderboard'));
 app.use('/api/questions', require('./routes/questions'));
 app.use('/api/daily-challenge', require('./routes/daily'));
+app.use('/api/clans', require('./routes/clans'));
 
 // 4. Centralized Error Boundary Middleware (Ensures server never crashes on uncaught rejects)
 app.use((err, req, res, next) => {

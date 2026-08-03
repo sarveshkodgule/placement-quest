@@ -31,7 +31,7 @@ router.get('/', async (req, res) => {
     }
 
     const ranks = await Student.find({})
-      .select('name avatar rank xp classType email')
+      .select('name avatar rank xp classType email activeTitle')
       .sort({ xp: -1 })
       .limit(100);
 
@@ -41,7 +41,8 @@ router.get('/', async (req, res) => {
         ...doc,
         name: (doc.name && doc.name.startsWith('http')) ? 'SDE Candidate' : (doc.name || 'SDE Candidate'),
         avatar: (doc.avatar && doc.avatar.startsWith('http')) ? '🧙' : (doc.avatar || '🚀'),
-        xp: typeof doc.xp === 'number' ? doc.xp : parseInt(doc.xp || 0, 10)
+        xp: typeof doc.xp === 'number' ? doc.xp : parseInt(doc.xp || 0, 10),
+        activeTitle: doc.activeTitle || ''
       };
     });
 

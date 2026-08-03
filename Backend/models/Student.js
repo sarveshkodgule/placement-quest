@@ -78,6 +78,14 @@ const StudentSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  badges: {
+    type: [String],
+    default: []
+  },
+  activeTitle: {
+    type: String,
+    default: ''
+  },
   lastDailyCompletedDate: {
     type: String,
     default: ''

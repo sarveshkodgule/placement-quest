@@ -55,6 +55,8 @@ router.post('/register', async (req, res) => {
           streak: student.streak,
           classType: student.classType,
           unlockedSkills: student.unlockedSkills,
+          badges: student.badges,
+          activeTitle: student.activeTitle,
           heistLevelsCompleted: student.heistLevelsCompleted,
           aptiHighScore: student.aptiHighScore,
           collegeName: student.collegeName,
@@ -94,6 +96,8 @@ router.post('/login', async (req, res) => {
           streak: student.streak,
           classType: student.classType,
           unlockedSkills: student.unlockedSkills,
+          badges: student.badges,
+          activeTitle: student.activeTitle,
           heistLevelsCompleted: student.heistLevelsCompleted,
           aptiHighScore: student.aptiHighScore,
           collegeName: student.collegeName,
@@ -136,6 +140,8 @@ router.put('/progress', protect, async (req, res) => {
       if (req.body.streak !== undefined) student.streak = Number(req.body.streak);
       if (req.body.classType !== undefined) student.classType = req.body.classType;
       if (req.body.unlockedSkills !== undefined) student.unlockedSkills = req.body.unlockedSkills;
+      if (req.body.badges !== undefined) student.badges = req.body.badges;
+      if (req.body.activeTitle !== undefined) student.activeTitle = req.body.activeTitle;
       if (req.body.heistLevelsCompleted !== undefined) student.heistLevelsCompleted = Number(req.body.heistLevelsCompleted);
       if (req.body.aptiHighScore !== undefined) student.aptiHighScore = Number(req.body.aptiHighScore);
       if (req.body.clan !== undefined) student.clan = req.body.clan;
