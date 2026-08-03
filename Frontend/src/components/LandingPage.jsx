@@ -54,7 +54,7 @@ export default function LandingPage() {
     } else {
       // Sign In: fetch token from server
       try {
-        const response = await fetch('http://localhost:5000/api/auth/login', {
+        const response = await fetch(`${window.API_BASE_URL || (window.API_BASE_URL || 'http://localhost:5000')}/api/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: emailInput, password: passInput })
@@ -96,7 +96,7 @@ export default function LandingPage() {
 
     // Sign Up: Register new student
     try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
+      const response = await fetch(`${window.API_BASE_URL || (window.API_BASE_URL || 'http://localhost:5000')}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -133,7 +133,7 @@ export default function LandingPage() {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/verify-id', {
+      const response = await fetch(`${window.API_BASE_URL || (window.API_BASE_URL || 'http://localhost:5000')}/api/auth/verify-id`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: emailInput, rollNumber: verifyRollNumberInput })
@@ -179,7 +179,7 @@ export default function LandingPage() {
         payload.newPassword = resetNewPassword;
       }
 
-      const response = await fetch('http://localhost:5000/api/auth/forgot-password', {
+      const response = await fetch(`${window.API_BASE_URL || (window.API_BASE_URL || 'http://localhost:5000')}/api/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

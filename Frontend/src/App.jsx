@@ -16,6 +16,8 @@ import ResumeBuilderTycoon from './games/ResumeBuilderTycoon';
 import CodeSnake from './games/CodeSnake';
 import AiMasterChallenge from './games/AiMasterChallenge';
 
+window.API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export default function App() {
   const { activeGame, notification } = usePlayerStore();
 
@@ -60,7 +62,7 @@ export default function App() {
   React.useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      fetch('http://localhost:5000/api/auth/me', {
+      fetch(`${window.API_BASE_URL || (window.API_BASE_URL || 'http://localhost:5000')}/api/auth/me`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       .then(res => res.json())

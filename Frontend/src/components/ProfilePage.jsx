@@ -115,12 +115,15 @@ export default function ProfilePage() {
   const [liveClans, setLiveClans] = React.useState([]);
   const [liveMembers, setLiveMembers] = React.useState([]);
   const [loadingClans, setLoadingClans] = React.useState(true);
+  const [inspectingClanId, setInspectingClanId] = React.useState(null);
+  const [inspectingMembers, setInspectingMembers] = React.useState([]);
+  const [loadingInspection, setLoadingInspection] = React.useState(false);
 
   React.useEffect(() => {
     const fetchClanData = async () => {
       try {
         // Fetch standings
-        const standingsRes = await fetch('http://localhost:5000/api/clans/standings');
+        const standingsRes = await fetch(`${window.API_BASE_URL || (window.API_BASE_URL || 'http://localhost:5000')}/api/clans/standings`);
         const standingsData = await standingsRes.json();
         if (standingsData.success) {
           setLiveClans(standingsData.standings);
@@ -128,7 +131,7 @@ export default function ProfilePage() {
 
         // Fetch members if candidate is in a clan
         if (clan) {
-          const membersRes = await fetch(`http://localhost:5000/api/clans/${clan}/members`);
+          const membersRes = await fetch(`${window.API_BASE_URL || (window.API_BASE_URL || 'http://localhost:5000')}/api/clans/${clan}/members`);
           const membersData = await membersRes.json();
           if (membersData.success) {
             setLiveMembers(membersData.members);
@@ -150,7 +153,7 @@ export default function ProfilePage() {
 
   React.useEffect(() => {
     const fetchLeaderboardData = () => {
-      fetch('http://localhost:5000/api/leaderboard')
+      fetch(`${window.API_BASE_URL || (window.API_BASE_URL || 'http://localhost:5000')}/api/leaderboard`)
         .then(res => res.json())
         .then(data => {
           let dbLeaderboard = [];
@@ -524,25 +527,86 @@ export default function ProfilePage() {
               <div style={styles.clanList}>
                 <p style={styles.clanSub}>Join a developer clan to compete in collective XP rankings and team up!</p>
                 {(liveClans.length > 0 ? liveClans : CLANS.map(c => ({ id: c.id, name: c.name, emoji: c.emoji, desc: c.desc, totalXp: 0, memberCount: 0 }))).map((clanItem) => (
-                  <div key={clanItem.id} style={styles.clanRow} onMouseEnter={playHoverSound}>
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                      <span style={{ fontSize: '1.5rem' }}>{clanItem.emoji}</span>
-                      <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
-                        <span style={styles.clanName}>{clanItem.name}</span>
-                        <span style={styles.clanDesc}>{clanItem.desc || 'A collective of ambitious developers.'}</span>
-                        <span style={styles.clanMeta}>👥 {clanItem.memberCount || 0} members • ⚡ Collective XP: {clanItem.totalXp || 0} XP</span>
+                  <div key={clanItem.id} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={styles.clanRow} onMouseEnter={playHoverSound}>
+                      <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                        <span style={{ fontSize: '1.5rem' }}>{clanItem.emoji}</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
+                          <span style={styles.clanName}>{clanItem.name}</span>
+                          <span style={styles.clanDesc}>{clanItem.desc || 'A collective of ambitious developers.'}</span>
+                          <span style={styles.clanMeta}>👥 {clanItem.memberCount || 0} members • ⚡ Collective XP: {clanItem.totalXp || 0} XP</span>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <button 
+                          className="game-btn" 
+                          style={{ padding: '4px 10px', fontSize: '0.7rem', borderColor: 'var(--accent-secondary)', color: 'var(--accent-secondary)' }}
+                          onClick={async () => {
+                            if (inspectingClanId === clanItem.id) {
+                              setInspectingClanId(null);
+                            } else {
+                              setInspectingClanId(clanItem.id);
+                              setLoadingInspection(true);
+                              try {
+                                const res = await fetch(`${window.API_BASE_URL || (window.API_BASE_URL || 'http://localhost:5000')}/api/clans/${clanItem.id}/members`);
+                                const data = await res.json();
+                                if (data.success) {
+                                  setInspectingMembers(data.members);
+                                }
+                              } catch(e) {}
+                              setLoadingInspection(false);
+                            }
+                            playHoverSound();
+                          }}
+                        >
+                          {inspectingClanId === clanItem.id ? 'Close' : 'Roster'}
+                        </button>
+                        <button 
+                          className="game-btn game-btn-primary" 
+                          style={styles.joinClanBtn}
+                          onClick={() => {
+                            setClan(clanItem.id);
+                            playHoverSound();
+                          }}
+                        >
+                          Join
+                        </button>
                       </div>
                     </div>
-                    <button 
-                      className="game-btn game-btn-primary" 
-                      style={styles.joinClanBtn}
-                      onClick={() => {
-                        setClan(clanItem.id);
-                        playHoverSound();
-                      }}
-                    >
-                      Join
-                    </button>
+
+                    {inspectingClanId === clanItem.id && (
+                      <div style={{ 
+                        backgroundColor: 'rgba(0,0,0,0.2)', 
+                        border: '1px solid rgba(255,255,255,0.03)', 
+                        borderRadius: '8px', 
+                        padding: '0.75rem', 
+                        marginLeft: '1.5rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '6px'
+                      }}>
+                        <div style={{ fontSize: '0.65rem', fontWeight: 'bold', color: 'var(--accent-secondary)', letterSpacing: '0.5px', marginBottom: '4px' }}>
+                          ⚡ CLAN MEMBERS ROSTER
+                        </div>
+                        {loadingInspection ? (
+                          <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Scanning database...</div>
+                        ) : inspectingMembers.length === 0 ? (
+                          <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>No developers in this clan yet. Be the first to join!</div>
+                        ) : (
+                          inspectingMembers.map((m, idx) => (
+                            <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.01)', padding: '4px 8px', borderRadius: '4px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', width: '12px' }}>{idx + 1}</span>
+                                <span>{renderAvatar(m.avatar, '16px')}</span>
+                                <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#FFF' }}>{m.name}</span>
+                                <span style={{ fontSize: '0.6rem', color: 'var(--text-secondary)', backgroundColor: 'rgba(255,255,255,0.05)', padding: '1px 4px', borderRadius: '3px' }}>{m.rank}</span>
+                              </div>
+                              <span style={{ fontSize: '0.7rem', color: 'var(--accent-color)', fontFamily: 'var(--font-mono)' }}>{m.xp} XP</span>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

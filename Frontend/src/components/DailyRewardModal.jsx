@@ -54,7 +54,7 @@ export default function DailyRewardModal({ isOpen, onClose }) {
     try {
       const token = localStorage.getItem('token');
       if (token) {
-        await fetch('http://localhost:5000/api/auth/claim-daily-reward', {
+        await fetch(`${window.API_BASE_URL || (window.API_BASE_URL || 'http://localhost:5000')}/api/auth/claim-daily-reward`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

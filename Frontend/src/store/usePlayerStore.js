@@ -68,7 +68,7 @@ const syncProgressWithBackend = async (state) => {
   if (!token || !state.profileLoaded) return;
 
   try {
-    await fetch('http://localhost:5000/api/auth/progress', {
+    await fetch(`${window.API_BASE_URL || (window.API_BASE_URL || 'http://localhost:5000')}/api/auth/progress`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -367,7 +367,7 @@ export const usePlayerStore = create((set, get) => ({
     if (!token) return;
 
     try {
-      const res = await fetch('http://localhost:5000/api/daily-challenge/complete', {
+      const res = await fetch(`${window.API_BASE_URL || (window.API_BASE_URL || 'http://localhost:5000')}/api/daily-challenge/complete`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -368,7 +368,7 @@ function shuffleQuestionObj(qObj) {
     };
 
     const solvedIds = localStorage.getItem('solved_question_ids_algo-arena') || '';
-    fetch(`http://localhost:5000/api/questions?category=algo-arena&limit=100&excludeIds=${solvedIds}`)
+    fetch(`${window.API_BASE_URL || (window.API_BASE_URL || 'http://localhost:5000')}/api/questions?category=algo-arena&limit=100&excludeIds=${solvedIds}`)
       .then(res => res.json())
       .then(data => {
         if (data.success && data.questions && data.questions.length > 0) {

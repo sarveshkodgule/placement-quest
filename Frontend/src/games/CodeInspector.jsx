@@ -363,7 +363,7 @@ export default function CodeInspector() {
     };
 
     const solvedIds = localStorage.getItem('solved_question_ids_code-inspector') || '';
-    fetch(`http://localhost:5000/api/questions?category=code-inspector&excludeIds=${solvedIds}`)
+    fetch(`${window.API_BASE_URL || (window.API_BASE_URL || 'http://localhost:5000')}/api/questions?category=code-inspector&excludeIds=${solvedIds}`)
       .then(res => res.json())
       .then(data => {
         if (data.success && data.questions && data.questions.length > 0) {

@@ -829,7 +829,7 @@ export default function Hub() {
   const [leaderboardExpanded, setLeaderboardExpanded] = useState(false);
 
   const fetchLeaderboardData = () => {
-    fetch('http://localhost:5000/api/leaderboard')
+    fetch(`${window.API_BASE_URL || (window.API_BASE_URL || 'http://localhost:5000')}/api/leaderboard`)
       .then(res => res.json())
       .then(data => {
         let dbLeaderboard = [];
@@ -896,7 +896,7 @@ export default function Hub() {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    fetch('http://localhost:5000/api/daily-challenge', { headers })
+    fetch(`${window.API_BASE_URL || (window.API_BASE_URL || 'http://localhost:5000')}/api/daily-challenge`, { headers })
       .then(res => res.json())
       .then(data => {
         if (data.success) {

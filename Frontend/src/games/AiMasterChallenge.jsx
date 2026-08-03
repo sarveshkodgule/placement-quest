@@ -516,7 +516,7 @@ function shuffleQuestionObj(qObj) {
 
   useEffect(() => {
     const solvedIds = localStorage.getItem('solved_question_ids_ai-master') || '';
-    fetch(`http://localhost:5000/api/questions?category=ai-master&limit=100&excludeIds=${solvedIds}`)
+    fetch(`${window.API_BASE_URL || (window.API_BASE_URL || 'http://localhost:5000')}/api/questions?category=ai-master&limit=100&excludeIds=${solvedIds}`)
       .then(res => res.json())
       .then(data => {
         if (data.success && data.questions && data.questions.length > 0) {
