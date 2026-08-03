@@ -14,11 +14,16 @@ import {
   Laptop,
   Database,
   Calendar,
-  Gift
+  Gift,
+  Music,
+  Play,
+  Pause,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 
 import { jsPDF } from 'jspdf';
-import { playHubBgm, stopHubBgm, playCardHover } from '../games/utils/audio';
+import { playCardHover } from '../games/utils/audio';
 import DailyRewardModal from './DailyRewardModal';
 
 const HARDCODED_CLANS = [
@@ -160,7 +165,23 @@ const BUILDINGS = [
 ];
 
 export default function Hub() {
-  const { setGame, triggerNotification, activeGame, xp, coins, clan, lastDailyRewardDate, dailyRewardModalOpen, setDailyRewardModalOpen } = usePlayerStore();
+  const { 
+    setGame, 
+    triggerNotification, 
+    activeGame, 
+    xp, 
+    coins, 
+    clan, 
+    lastDailyRewardDate, 
+    dailyRewardModalOpen, 
+    setDailyRewardModalOpen,
+    activeTrack,
+    setTrack,
+    bgmVolume,
+    setBgmVolume,
+    isMuted,
+    toggleAudio
+  } = usePlayerStore();
   const [codexOpen, setCodexOpen] = useState(false);
   const [codexTab, setCodexTab] = useState('algo');
   const [standingsTab, setStandingsTab] = useState('players'); // 'players' | 'clans'
@@ -884,8 +905,10 @@ export default function Hub() {
   }, []);
 
   useEffect(() => {
-    // Play cyberpunk city ambient loop
-    playHubBgm();
+    // Start playing default lofi beats on mount if no BGM is active
+    if (activeTrack === 'none') {
+      setTrack('lofi');
+    }
 
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
@@ -895,7 +918,6 @@ export default function Hub() {
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      stopHubBgm();
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
@@ -1369,6 +1391,92 @@ export default function Hub() {
         isOpen={dailyRewardModalOpen} 
         onClose={() => setDailyRewardModalOpen(false)} 
       />
+
+      {/* Centralized BGM & Sound Controller Widget */}
+      <div style={styles.musicWidget}>
+        <div style={styles.musicHeader}>
+          <Music size={14} color="var(--accent-secondary)" className="pulse-glow-animation" />
+          <span style={styles.musicWidgetTitle}>METROPOLIS RADIO</span>
+          <span style={{ fontSize: '0.6rem', color: isMuted ? 'var(--danger-color)' : activeTrack === 'none' ? 'var(--text-secondary)' : 'var(--success-color)', textTransform: 'uppercase', fontWeight: 'bold' }}>
+            {isMuted ? 'Muted' : activeTrack === 'none' ? 'Stopped' : 'On Air'}
+          </span>
+        </div>
+        
+        {/* Track Selection Buttons */}
+        <div style={styles.trackList}>
+          <button 
+            style={{ 
+              ...styles.trackBtn, 
+              borderColor: activeTrack === 'lofi' ? 'var(--accent-secondary)' : 'rgba(255,255,255,0.06)', 
+              color: activeTrack === 'lofi' ? 'var(--accent-secondary)' : 'var(--text-secondary)',
+              boxShadow: activeTrack === 'lofi' ? 'var(--glow-secondary)' : 'none'
+            }}
+            onClick={() => setTrack('lofi')}
+          >
+            ☕ Lofi Coding Beats
+          </button>
+          <button 
+            style={{ 
+              ...styles.trackBtn, 
+              borderColor: activeTrack === 'jazz' ? 'var(--accent-color)' : 'rgba(255,255,255,0.06)', 
+              color: activeTrack === 'jazz' ? 'var(--accent-color)' : 'var(--text-secondary)',
+              boxShadow: activeTrack === 'jazz' ? 'var(--glow-accent)' : 'none'
+            }}
+            onClick={() => setTrack('jazz')}
+          >
+            🎷 Corporate Jazz
+          </button>
+          <button 
+            style={{ 
+              ...styles.trackBtn, 
+              borderColor: activeTrack === 'chiptune' ? 'var(--success-color)' : 'rgba(255,255,255,0.06)', 
+              color: activeTrack === 'chiptune' ? 'var(--success-color)' : 'var(--text-secondary)',
+              boxShadow: activeTrack === 'chiptune' ? 'var(--glow-success)' : 'none'
+            }}
+            onClick={() => setTrack('chiptune')}
+          >
+            👾 Retro Chiptune
+          </button>
+        </div>
+
+        {/* Volume & Audio State Controls */}
+        <div style={styles.musicControlsRow}>
+          <button 
+            style={styles.playPauseBtn} 
+            onClick={() => setTrack(activeTrack === 'none' ? 'lofi' : 'none')}
+            title={activeTrack === 'none' ? "Play Radio" : "Pause Radio"}
+          >
+            {activeTrack === 'none' ? <Play size={10} fill="currentColor" /> : <Pause size={10} fill="currentColor" />}
+          </button>
+          
+          <button style={styles.muteBtn} onClick={toggleAudio} title={isMuted ? "Unmute All" : "Mute All"}>
+            {isMuted ? <VolumeX size={14} color="var(--danger-color)" /> : <Volume2 size={14} color="var(--accent-secondary)" />}
+          </button>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1 }}>
+            <input 
+              type="range"
+              min="0"
+              max="1"
+              step="0.05"
+              value={bgmVolume}
+              onChange={(e) => setBgmVolume(parseFloat(e.target.value))}
+              style={styles.volumeSlider}
+            />
+          </div>
+        </div>
+
+        {/* Visualizer bars */}
+        {activeTrack !== 'none' && !isMuted && (
+          <div style={styles.visualizerContainer}>
+            <div className="bar animate-bar-1"></div>
+            <div className="bar animate-bar-2"></div>
+            <div className="bar animate-bar-3"></div>
+            <div className="bar animate-bar-4"></div>
+            <div className="bar animate-bar-5"></div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -1764,5 +1872,97 @@ const styles = {
     border: '1px solid rgba(0, 243, 255, 0.15)',
     borderRadius: '6px',
     fontFamily: 'var(--font-mono)',
+  },
+  musicWidget: {
+    position: 'fixed',
+    bottom: '24px',
+    right: '24px',
+    width: '300px',
+    backgroundColor: 'rgba(19, 23, 34, 0.85)',
+    backdropFilter: 'blur(12px)',
+    border: '1px solid var(--border-color)',
+    borderRadius: 'var(--border-radius-md)',
+    boxShadow: 'var(--shadow)',
+    padding: '1.25rem',
+    zIndex: 99,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+    transition: 'all 0.3s ease',
+  },
+  musicHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderBottom: '1px solid rgba(255,255,255,0.05)',
+    paddingBottom: '8px',
+  },
+  musicWidgetTitle: {
+    fontFamily: 'var(--font-title)',
+    fontSize: '0.75rem',
+    fontWeight: 'bold',
+    color: 'var(--text-primary)',
+    letterSpacing: '1px',
+    flex: 1,
+    marginLeft: '8px',
+    textAlign: 'left',
+  },
+  trackList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+  },
+  trackBtn: {
+    background: 'rgba(0,0,0,0.2)',
+    border: '1px solid var(--border-color)',
+    borderRadius: '6px',
+    padding: '6px 12px',
+    fontSize: '0.7rem',
+    textAlign: 'left',
+    cursor: 'pointer',
+    fontFamily: 'var(--font-body)',
+    fontWeight: '600',
+    transition: 'all 0.2s ease',
+  },
+  musicControlsRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    marginTop: '4px',
+  },
+  playPauseBtn: {
+    backgroundColor: 'var(--accent-color)',
+    border: 'none',
+    borderRadius: '50%',
+    width: '30px',
+    height: '30px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#000',
+    cursor: 'pointer',
+    transition: 'transform 0.2s ease',
+  },
+  muteBtn: {
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  volumeSlider: {
+    width: '100%',
+    accentColor: 'var(--accent-secondary)',
+    height: '4px',
+    cursor: 'pointer',
+  },
+  visualizerContainer: {
+    display: 'flex',
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    gap: '4px',
+    height: '24px',
+    marginTop: '6px',
   }
 };

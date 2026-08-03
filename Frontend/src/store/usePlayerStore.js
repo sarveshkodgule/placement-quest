@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { audioManager } from '../utils/audioManager';
 
 const RANKS = [
   { name: 'Fresher', xpNeeded: 0 },
@@ -121,14 +122,46 @@ export const usePlayerStore = create((set, get) => ({
   detectiveEndingsUnlocked: [],
   notification: null,
   isMuted: false,
+  bgmVolume: 0.5,
+  sfxVolume: 0.5,
+  activeTrack: 'none',
   lastDailyRewardDate: '',
   dailyRewardModalOpen: false,
 
   // Set Daily Reward Modal Visibility
   setDailyRewardModalOpen: (isOpen) => set({ dailyRewardModalOpen: isOpen }),
 
-  // Audio Toggle
-  toggleAudio: () => set((state) => ({ isMuted: !state.isMuted })),
+  // Audio toggles and modifiers
+  toggleAudio: () => set((state) => {
+    const nextMuted = !state.isMuted;
+    audioManager.setMuted(nextMuted);
+    return { isMuted: nextMuted };
+  }),
+
+  setBgmVolume: (vol) => {
+    set({ bgmVolume: vol });
+    audioManager.setBgmVolume(vol);
+  },
+
+  setSfxVolume: (vol) => {
+    set({ sfxVolume: vol });
+    audioManager.setSfxVolume(vol);
+  },
+
+  setTrack: (trackName) => {
+    set({ activeTrack: trackName });
+    audioManager.playTrack(trackName);
+  },
+
+  playGlobalSfx: (type) => {
+    const current = get();
+    if (current.isMuted) return;
+    if (type === 'collect') audioManager.playCollect();
+    else if (type === 'success') audioManager.playSuccess();
+    else if (type === 'error') audioManager.playError();
+    else if (type === 'bossHit') audioManager.playBossHit();
+    else if (type === 'upgrade') audioManager.playUpgrade();
+  },
 
   // Daily Reward Claim Action
   claimDailyReward: (rewardCoins, rewardXP, newStreak) => {

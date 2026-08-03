@@ -7,111 +7,28 @@ import {
   XCircle, Laptop, BookOpen, Coffee, Users, Send, ShoppingBag, Landmark
 } from 'lucide-react';
 
-// Chiptune Audio Synthesizer Engine
+// Web Audio API Sound Synthesizer for ResumeBuilderTycoon - Routed to Central System
 const tycoonAudio = {
-  ctx: null,
-  masterGain: null,
-  bgmInterval: null,
-  bgmStep: 0,
   isEnabled: true,
 
-  init() {
-    if (this.ctx) return;
-    try {
-      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-      this.ctx = new AudioContextClass();
-      this.masterGain = this.ctx.createGain();
-      this.masterGain.gain.setValueAtTime(0.02, this.ctx.currentTime);
-      this.masterGain.connect(this.ctx.destination);
-    } catch (e) {
-      console.warn("Tycoon audio failed to load:", e);
-    }
-  },
-
   playBgm() {
-    this.init();
-    if (!this.ctx || this.bgmInterval || !this.isEnabled) return;
-    
-    this.bgmStep = 0;
-    // Dreamy corporate arpeggios (Cmaj7 -> Fmaj7 -> Dm7 -> G7)
-    const chords = [
-      [261.63, 329.63, 392.00, 493.88], // Cmaj7
-      [349.23, 440.00, 523.25, 659.25], // Fmaj7
-      [293.66, 349.23, 440.00, 587.33], // Dm7
-      [392.00, 493.88, 587.33, 783.99]  // G7
-    ];
-
-    this.bgmInterval = setInterval(() => {
-      if (this.ctx.state === 'suspended') {
-        this.ctx.resume();
-        return;
-      }
-      const time = this.ctx.currentTime;
-      const currentChord = chords[Math.floor(this.bgmStep / 4) % chords.length];
-      const freq = currentChord[this.bgmStep % currentChord.length];
-
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, time);
-      gain.gain.setValueAtTime(0.04, time); // soft volume
-      gain.gain.linearRampToValueAtTime(0.001, time + 0.55);
-
-      osc.connect(gain);
-      gain.connect(this.masterGain);
-      osc.start(time);
-      osc.stop(time + 0.56);
-
-      this.bgmStep++;
-    }, 600); // Relaxing pace
+    // Handled globally via setTrack
   },
 
   stopBgm() {
-    if (this.bgmInterval) {
-      clearInterval(this.bgmInterval);
-      this.bgmInterval = null;
-    }
+    // Handled globally via setTrack
   },
 
   playBeep(freq = 440, duration = 0.08, type = 'sine') {
-    this.init();
-    if (!this.ctx || !this.isEnabled) return;
-    if (this.ctx.state === 'suspended') this.ctx.resume();
-    
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    const time = this.ctx.currentTime;
-
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, time);
-    gain.gain.setValueAtTime(0.08, time);
-    gain.gain.linearRampToValueAtTime(0.001, time + duration - 0.01);
-
-    osc.connect(gain);
-    gain.connect(this.masterGain);
-    osc.start(time);
-    osc.stop(time + duration);
+    if (this.isEnabled) {
+      usePlayerStore.getState().playGlobalSfx('collect');
+    }
   },
 
   playWeekAdvance() {
-    this.init();
-    if (!this.ctx || !this.isEnabled) return;
-    const time = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(300, time);
-    osc.frequency.linearRampToValueAtTime(800, time + 0.2);
-
-    gain.gain.setValueAtTime(0.12, time);
-    gain.gain.linearRampToValueAtTime(0.001, time + 0.2);
-
-    osc.connect(gain);
-    gain.connect(this.masterGain);
-    osc.start(time);
-    osc.stop(time + 0.21);
+    if (this.isEnabled) {
+      usePlayerStore.getState().playGlobalSfx('upgrade');
+    }
   }
 };
 
@@ -125,7 +42,7 @@ const TYCOON_LEVELS = [
 ];
 
 export default function ResumeBuilderTycoon() {
-  const { addCoins, addXP, setGame, completeDailyChallenge, triggerNotification, isMuted } = usePlayerStore();
+  const { addCoins, addXP, setGame, completeDailyChallenge, triggerNotification, isMuted, setTrack } = usePlayerStore();
 
   // Campaign State
   const [currentLevelIdx, setCurrentLevelIdx] = useState(0);
@@ -143,13 +60,11 @@ export default function ResumeBuilderTycoon() {
   // Handle background music loop
   useEffect(() => {
     if (soundEnabled && !isMuted && activeScreen !== 'menu') {
-      tycoonAudio.isEnabled = true;
-      tycoonAudio.stopBgm();
-      tycoonAudio.playBgm();
+      setTrack('jazz');
     } else {
-      tycoonAudio.stopBgm();
+      setTrack('lofi');
     }
-    return () => tycoonAudio.stopBgm();
+    return () => setTrack('lofi');
   }, [soundEnabled, isMuted, activeScreen]);
 
 
