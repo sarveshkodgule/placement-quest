@@ -837,7 +837,6 @@ export default function Hub() {
           dbLeaderboard = data.leaderboard;
         }
 
-        // Live Local Hydration: Merge current logged-in player's store XP
         const currentPlayer = usePlayerStore.getState();
         if (currentPlayer && (currentPlayer.name || currentPlayer.email)) {
           let found = false;
@@ -846,7 +845,12 @@ export default function Hub() {
                             (currentPlayer.name && p.name && p.name.toLowerCase() === currentPlayer.name.toLowerCase());
             if (isMatch) {
               found = true;
-              return { ...p, xp: Math.max(Number(p.xp || 0), Number(currentPlayer.xp || 0)), avatar: currentPlayer.avatar || p.avatar };
+              return { 
+                ...p, 
+                xp: Math.max(Number(p.xp || 0), Number(currentPlayer.xp || 0)), 
+                avatar: currentPlayer.avatar || p.avatar,
+                activeTitle: currentPlayer.activeTitle || p.activeTitle || ''
+              };
             }
             return p;
           });
@@ -857,7 +861,8 @@ export default function Hub() {
               email: currentPlayer.email,
               avatar: currentPlayer.avatar,
               rank: currentPlayer.rank,
-              xp: Number(currentPlayer.xp || 0)
+              xp: Number(currentPlayer.xp || 0),
+              activeTitle: currentPlayer.activeTitle || ''
             });
           }
         }
@@ -1090,8 +1095,24 @@ export default function Hub() {
                             </span>
                             <span style={styles.rightAvatar}>{renderAvatar(player.avatar, '22px')}</span>
                             <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
-                              <span style={{ ...styles.rightName, color: isTopRank ? '#FDE047' : '#FFF', fontWeight: isTopRank ? 'bold' : '600' }}>
-                                {displayName} {isTopRank && <span style={{ fontSize: '0.65rem', color: '#EAB308', marginLeft: '4px' }}>(TOP XP LEADER)</span>}
+                              <span style={{ ...styles.rightName, color: isTopRank ? '#FDE047' : '#FFF', fontWeight: isTopRank ? 'bold' : '600', display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+                                {displayName} 
+                                {player.activeTitle && (
+                                  <span style={{ 
+                                    fontSize: '0.6rem', 
+                                    color: 'var(--accent-secondary)', 
+                                    padding: '1px 6px',
+                                    backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                                    borderRadius: '4px',
+                                    border: '1px solid rgba(6, 182, 212, 0.2)',
+                                    fontWeight: '700',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.5px'
+                                  }}>
+                                    {player.activeTitle}
+                                  </span>
+                                )}
+                                {isTopRank && !player.activeTitle && <span style={{ fontSize: '0.65rem', color: '#EAB308' }}>(TOP XP LEADER)</span>}
                               </span>
                               <span style={styles.rightHandle}>@{playerUsername}</span>
                             </div>

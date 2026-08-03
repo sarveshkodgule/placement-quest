@@ -125,6 +125,8 @@ export const usePlayerStore = create((set, get) => ({
   bgmVolume: 0.5,
   sfxVolume: 0.5,
   activeTrack: 'none',
+  badges: [],
+  activeTitle: '',
   lastDailyRewardDate: '',
   dailyRewardModalOpen: false,
 
@@ -183,6 +185,8 @@ export const usePlayerStore = create((set, get) => ({
       xp: newXP,
       streak: newStreak
     });
+
+    get().checkAchievements();
   },
 
   // Action methods
@@ -226,6 +230,8 @@ export const usePlayerStore = create((set, get) => ({
       xp: newXP,
       rank: currentRank
     });
+
+    get().checkAchievements();
   },
 
   addCoins: (amount) => {
@@ -236,6 +242,8 @@ export const usePlayerStore = create((set, get) => ({
       ...current,
       coins: newCoins
     });
+
+    get().checkAchievements();
   },
   
   loseHeart: () => set((state) => {
@@ -301,6 +309,59 @@ export const usePlayerStore = create((set, get) => ({
     });
   },
 
+  setActiveTitle: (title) => {
+    const current = get();
+    set({ activeTitle: title });
+    syncProgressWithBackend({
+      ...current,
+      activeTitle: title
+    });
+  },
+
+  checkAchievements: () => {
+    const current = get();
+    if (!current.profileLoaded) return;
+
+    const newBadges = [...(current.badges || [])];
+    let unlockedAny = false;
+
+    const addBadgeIfEligible = (badgeId, isEligible, badgeLabel) => {
+      if (isEligible && !newBadges.includes(badgeId)) {
+        newBadges.push(badgeId);
+        unlockedAny = true;
+        
+        current.playGlobalSfx('upgrade');
+        current.triggerNotification('🏆 ACHIEVEMENT UNLOCKED!', `Earned "${badgeLabel}" badge!`, '⭐');
+      }
+    };
+
+    // 1. DSA Slayer: Arena level >= 3
+    addBadgeIfEligible('dsa_slayer', current.arenaLevel >= 3, 'DSA Slayer');
+
+    // 2. SQL Master: Completed >= 2 heists
+    addBadgeIfEligible('sql_master', current.heistLevelsCompleted >= 2, 'SQL Master');
+
+    // 3. Apti Genius: High score >= 80
+    addBadgeIfEligible('apti_genius', current.aptiHighScore >= 80, 'Apti Genius');
+
+    // 4. Tech Tycoon: Coins >= 500
+    addBadgeIfEligible('tech_tycoon', current.coins >= 500, 'Tech Tycoon');
+
+    // 5. Streaker: Streak >= 5
+    addBadgeIfEligible('streaker', current.streak >= 5, 'Daily Streaker');
+
+    // 6. Tech Lead: Rank Tech Lead or above (XP >= 3000)
+    addBadgeIfEligible('tech_lead', current.xp >= 3000, 'Tech Lead');
+
+    if (unlockedAny) {
+      set({ badges: newBadges });
+      syncProgressWithBackend({
+        ...current,
+        badges: newBadges
+      });
+    }
+  },
+
   completeDailyChallenge: async () => {
     const token = localStorage.getItem('token');
     if (!token) return;
@@ -335,6 +396,7 @@ export const usePlayerStore = create((set, get) => ({
     const mergedHeist = Math.max(current.heistLevelsCompleted, studentData.heistLevelsCompleted || 0);
     const mergedApti = Math.max(current.aptiHighScore, studentData.aptiHighScore || 0);
     const mergedSkills = Array.from(new Set([...(current.unlockedSkills || []), ...(studentData.unlockedSkills || [])]));
+    const mergedBadges = Array.from(new Set([...(current.badges || []), ...(studentData.badges || [])]));
     const mergedClass = studentData.classType || current.classType;
 
     let currentRank = studentData.rank || 'Fresher';
@@ -354,6 +416,8 @@ export const usePlayerStore = create((set, get) => ({
       streak: studentData.streak,
       classType: mergedClass,
       unlockedSkills: mergedSkills,
+      badges: mergedBadges,
+      activeTitle: studentData.activeTitle || '',
       heistLevelsCompleted: mergedHeist,
       aptiHighScore: mergedApti,
       email: studentData.email,
@@ -396,7 +460,9 @@ export const usePlayerStore = create((set, get) => ({
       department: '',
       gradYear: null,
       rollNumber: '',
-      clan: ''
+      clan: '',
+      badges: [],
+      activeTitle: ''
     });
   }
 }));

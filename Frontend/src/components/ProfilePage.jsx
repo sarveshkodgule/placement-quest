@@ -11,68 +11,46 @@ function renderAvatar(val) {
 
 const ACHIEVEMENTS = [
   {
-    id: 'sql_master',
-    title: 'SQL Cyber Decryptor',
-    desc: 'Bypassed server defenses to extract files in the Data Bank.',
-    icon: Terminal,
-    color: '#39FF14',
-    check: (s) => s.heistLevelsCompleted > 0
-  },
-  {
-    id: 'algo_slayer',
-    title: 'Algorithm Gladiator',
-    desc: 'Defeated a data structure monster in the DSA Arena.',
+    id: 'dsa_slayer',
+    title: 'DSA Slayer',
+    desc: 'Reach Algo Arena level 3.',
     icon: ShieldCheck,
-    color: '#EF4444',
-    check: (s) => s.xp >= 40
+    color: '#EF4444'
   },
   {
-    id: 'placement_hunter',
-    title: 'Logical Ninja',
-    desc: 'Achieved a score of 50+ in Apti-Rush.',
-    icon: Trophy,
-    color: '#FF007F',
-    check: (s) => s.aptiHighScore >= 50
-  },
-  {
-    id: 'cto_badge',
-    title: 'Incubator Founder',
-    desc: 'Successfully launched a SaaS company from a dorm room.',
-    icon: Cpu,
-    color: '#F97316',
-    check: (s) => s.xp >= 80
-  },
-  {
-    id: 'decryptor_auditor',
-    title: 'Compiler Auditor',
-    desc: 'Audited and debugged corrupt code lines in Code Decryptor.',
-    icon: ShieldAlert,
-    color: '#EC4899',
-    check: (s) => s.xp >= 60
-  },
-  {
-    id: 'codex_scholar',
-    title: 'Databank Archivist',
-    desc: 'Unlocked all Metropolis database entries in the Codex Terminal.',
-    icon: Star,
-    color: '#00F3FF',
-    check: (s) => localStorage.getItem('metropolis_codex_opened') === 'true' || s.xp >= 20
-  },
-  {
-    id: 'code_snake_master',
-    title: 'Syntactic Reptile',
-    desc: 'Completed Level 5 in the Code Snake Arena.',
+    id: 'sql_master',
+    title: 'SQL Master',
+    desc: 'Complete at least 2 SQL heists.',
     icon: Terminal,
-    color: '#10B981',
-    check: (s) => s.xp >= 150
+    color: '#10B981'
   },
   {
-    id: 'ai_champion_badge',
-    title: 'AI Champion',
-    desc: 'Completed all 10 stages in the AI Master Challenge.',
+    id: 'apti_genius',
+    title: 'Apti Genius',
+    desc: 'Achieve an Aptitude score of 80+.',
     icon: Trophy,
-    color: '#00F3FF',
-    check: (s) => s.xp >= 300
+    color: '#FF007F'
+  },
+  {
+    id: 'tech_tycoon',
+    title: 'Tech Tycoon',
+    desc: 'Accumulate 500 or more coins.',
+    icon: Coins,
+    color: '#F59E0B'
+  },
+  {
+    id: 'streaker',
+    title: 'Daily Streaker',
+    desc: 'Achieve a daily login streak of 5+ days.',
+    icon: Flame,
+    color: '#F97316'
+  },
+  {
+    id: 'tech_lead',
+    title: 'Tech Lead',
+    desc: 'Reach the Tech Lead rank (3,000 XP).',
+    icon: Award,
+    color: '#00F3FF'
   }
 ];
 
@@ -115,7 +93,8 @@ export default function ProfilePage() {
   const { 
     name, avatar, rank, xp, coins, streak, classType, unlockedSkills, 
     heistLevelsCompleted, aptiHighScore, setGame,
-    collegeName, department, gradYear, rollNumber, email, clan, setClan
+    collegeName, department, gradYear, rollNumber, email, clan, setClan,
+    badges, activeTitle, setActiveTitle
   } = store;
 
   const { level, xpNeededForNext } = getPlayerLevelInfo(xp);
@@ -133,6 +112,41 @@ export default function ProfilePage() {
 
   const [leaderboard, setLeaderboard] = React.useState([]);
   const [leaderboardExpanded, setLeaderboardExpanded] = React.useState(false);
+  const [liveClans, setLiveClans] = React.useState([]);
+  const [liveMembers, setLiveMembers] = React.useState([]);
+  const [loadingClans, setLoadingClans] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchClanData = async () => {
+      try {
+        // Fetch standings
+        const standingsRes = await fetch('http://localhost:5000/api/clans/standings');
+        const standingsData = await standingsRes.json();
+        if (standingsData.success) {
+          setLiveClans(standingsData.standings);
+        }
+
+        // Fetch members if candidate is in a clan
+        if (clan) {
+          const membersRes = await fetch(`http://localhost:5000/api/clans/${clan}/members`);
+          const membersData = await membersRes.json();
+          if (membersData.success) {
+            setLiveMembers(membersData.members);
+          }
+        } else {
+          setLiveMembers([]);
+        }
+      } catch (err) {
+        console.error("Clans data fetch failed:", err);
+      } finally {
+        setLoadingClans(false);
+      }
+    };
+
+    fetchClanData();
+    const interval = setInterval(fetchClanData, 3000);
+    return () => clearInterval(interval);
+  }, [clan]);
 
   React.useEffect(() => {
     const fetchLeaderboardData = () => {
@@ -152,7 +166,12 @@ export default function ProfilePage() {
                               (currentPlayer.name && p.name && p.name.toLowerCase() === currentPlayer.name.toLowerCase());
               if (isMatch) {
                 found = true;
-                return { ...p, xp: Math.max(Number(p.xp || 0), Number(currentPlayer.xp || 0)), avatar: currentPlayer.avatar || p.avatar };
+                return { 
+                  ...p, 
+                  xp: Math.max(Number(p.xp || 0), Number(currentPlayer.xp || 0)), 
+                  avatar: currentPlayer.avatar || p.avatar,
+                  activeTitle: currentPlayer.activeTitle || p.activeTitle || ''
+                };
               }
               return p;
             });
@@ -163,7 +182,8 @@ export default function ProfilePage() {
                 email: currentPlayer.email,
                 avatar: currentPlayer.avatar,
                 rank: currentPlayer.rank,
-                xp: Number(currentPlayer.xp || 0)
+                xp: Number(currentPlayer.xp || 0),
+                activeTitle: currentPlayer.activeTitle || ''
               });
             }
           }
@@ -229,6 +249,24 @@ export default function ProfilePage() {
           </button>
           
           <h2 style={styles.hackerName}>{name}</h2>
+          {activeTitle && (
+            <div style={{ 
+              fontSize: '0.7rem', 
+              color: 'var(--accent-secondary)', 
+              fontFamily: 'var(--font-mono)', 
+              marginBottom: '0.75rem',
+              fontWeight: '700',
+              textTransform: 'uppercase',
+              letterSpacing: '1px',
+              backgroundColor: 'rgba(6, 182, 212, 0.1)',
+              padding: '2px 10px',
+              borderRadius: '6px',
+              border: '1px solid rgba(6, 182, 212, 0.3)',
+              display: 'inline-block'
+            }}>
+              {activeTitle}
+            </div>
+          )}
           {email && (
             <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)', marginBottom: '0.5rem' }}>
               @{email.split('@')[0]}
@@ -360,12 +398,12 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Section 2: Badges Achievements */}
           <div className="game-card" style={styles.achievementsCard}>
-            <h3 style={styles.panelTitle}>🏆 HACKER ACHIEVEMENTS</h3>
+            <h3 style={styles.panelTitle}>🏆 HACKER ACHIEVEMENTS <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', float: 'right' }}>(Click unlocked badge to set active title)</span></h3>
             <div style={styles.achievementsGrid}>
               {ACHIEVEMENTS.map((ach) => {
-                const isUnlocked = ach.check(store);
+                const isUnlocked = badges && badges.includes(ach.id);
+                const isActive = activeTitle === ach.title;
                 const AchIcon = ach.icon;
                 
                 return (
@@ -373,13 +411,36 @@ export default function ProfilePage() {
                     key={ach.id} 
                     style={{ 
                       ...styles.badgeCard, 
-                      borderColor: isUnlocked ? ach.color : 'rgba(255,255,255,0.03)',
+                      borderColor: isActive ? 'var(--accent-secondary)' : (isUnlocked ? ach.color : 'rgba(255,255,255,0.03)'),
                       opacity: isUnlocked ? 1 : 0.35,
-                      boxShadow: isUnlocked ? `0 0 10px rgba(${hexToRgb(ach.color)}, 0.2)` : 'none'
+                      boxShadow: isActive ? '0 0 15px rgba(6, 182, 212, 0.3)' : (isUnlocked ? `0 0 10px rgba(${hexToRgb(ach.color)}, 0.2)` : 'none'),
+                      cursor: isUnlocked ? 'pointer' : 'default',
+                      position: 'relative'
                     }}
-                    className="game-card"
+                    className={`game-card ${isUnlocked ? 'hover-glow' : ''}`}
+                    onClick={() => {
+                      if (isUnlocked) {
+                        setActiveTitle(isActive ? '' : ach.title);
+                        store.playGlobalSfx('success');
+                      }
+                    }}
                     onMouseEnter={playHoverSound}
                   >
+                    {isActive && (
+                      <span style={{
+                        position: 'absolute',
+                        top: '6px',
+                        right: '8px',
+                        fontSize: '0.55rem',
+                        backgroundColor: 'var(--accent-secondary)',
+                        color: '#000',
+                        padding: '1px 6px',
+                        borderRadius: '4px',
+                        fontWeight: '800'
+                      }}>
+                        ACTIVE
+                      </span>
+                    )}
                     <div style={{ ...styles.badgeIconBg, backgroundColor: isUnlocked ? `rgba(${hexToRgb(ach.color)}, 0.1)` : 'rgba(0,0,0,0.2)' }}>
                       <AchIcon size={24} color={isUnlocked ? ach.color : '#4B5563'} />
                     </div>
@@ -418,8 +479,23 @@ export default function ProfilePage() {
                       <span style={{ ...styles.rankNum, color: isTop ? '#FDE047' : '#9CA3AF' }}>{isTop ? '👑 🥇' : idx + 1}</span>
                       <span style={{ fontSize: '1.25rem' }}>{renderAvatar(player.avatar)}</span>
                       <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
-                        <span style={{ ...styles.leaderName, color: isTop ? '#FDE047' : '#FFF', fontWeight: isTop ? 'bold' : '600' }}>
-                          {player.name} {isTop && <span style={{ fontSize: '0.65rem', color: '#EAB308', marginLeft: '4px' }}>(TOP XP)</span>}
+                        <span style={{ ...styles.leaderName, color: isTop ? '#FDE047' : '#FFF', fontWeight: isTop ? 'bold' : '600', display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+                          {player.name} 
+                          {player.activeTitle && (
+                            <span style={{ 
+                              fontSize: '0.55rem', 
+                              color: 'var(--accent-secondary)', 
+                              padding: '1px 5px',
+                              backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                              borderRadius: '4px',
+                              border: '1px solid rgba(6, 182, 212, 0.2)',
+                              fontWeight: '700',
+                              textTransform: 'uppercase'
+                            }}>
+                              {player.activeTitle}
+                            </span>
+                          )}
+                          {isTop && !player.activeTitle && <span style={{ fontSize: '0.65rem', color: '#EAB308' }}>(TOP XP)</span>}
                         </span>
                         <span style={styles.leaderSub}>{player.classType || 'SDE Recruit'}</span>
                       </div>
@@ -444,17 +520,17 @@ export default function ProfilePage() {
             <h3 style={styles.panelTitle}>🌐 DEVELOPER CLANS</h3>
             
             {!clan ? (
-              // List available clans
+              // List available clans dynamically with live standings information
               <div style={styles.clanList}>
                 <p style={styles.clanSub}>Join a developer clan to compete in collective XP rankings and team up!</p>
-                {CLANS.map((clanItem) => (
+                {(liveClans.length > 0 ? liveClans : CLANS.map(c => ({ id: c.id, name: c.name, emoji: c.emoji, desc: c.desc, totalXp: 0, memberCount: 0 }))).map((clanItem) => (
                   <div key={clanItem.id} style={styles.clanRow} onMouseEnter={playHoverSound}>
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                       <span style={{ fontSize: '1.5rem' }}>{clanItem.emoji}</span>
                       <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
                         <span style={styles.clanName}>{clanItem.name}</span>
-                        <span style={styles.clanDesc}>{clanItem.desc}</span>
-                        <span style={styles.clanMeta}>👥 {clanItem.members.length + 1} members • ⚡ Collective XP: {clanItem.members.reduce((acc, m) => acc + m.xp, 0) + xp}</span>
+                        <span style={styles.clanDesc}>{clanItem.desc || 'A collective of ambitious developers.'}</span>
+                        <span style={styles.clanMeta}>👥 {clanItem.memberCount || 0} members • ⚡ Collective XP: {clanItem.totalXp || 0} XP</span>
                       </div>
                     </div>
                     <button 
@@ -471,10 +547,36 @@ export default function ProfilePage() {
                 ))}
               </div>
             ) : (() => {
-              const activeClan = CLANS.find(c => c.id === clan) || CLANS[0];
-              const displayMembers = [...activeClan.members];
-              if (!displayMembers.some(m => m.name === name || m.name === `${name} (You)`)) {
-                displayMembers.push({ name: `${name} (You)`, rank: rank, xp: xp, avatar: avatar });
+              const activeClan = liveClans.find(c => c.id === clan) || CLANS.find(c => c.id === clan) || {
+                name: 'Your Clan',
+                emoji: '🛡️',
+                desc: 'Developer Guild'
+              };
+
+              let displayMembers = [...liveMembers];
+              const userEmailLower = email ? email.toLowerCase() : '';
+              const userMatch = displayMembers.some(m => m.email && m.email.toLowerCase() === userEmailLower);
+              if (!userMatch) {
+                displayMembers.push({
+                  name: `${name} (You)`,
+                  avatar: avatar,
+                  rank: rank,
+                  xp: xp,
+                  email: email
+                });
+              } else {
+                displayMembers = displayMembers.map(m => {
+                  if (m.email && m.email.toLowerCase() === userEmailLower) {
+                    return {
+                      ...m,
+                      name: `${m.name} (You)`,
+                      xp: Math.max(m.xp, xp),
+                      avatar: avatar,
+                      rank: rank
+                    };
+                  }
+                  return m;
+                });
               }
               displayMembers.sort((a, b) => b.xp - a.xp);
 
@@ -492,8 +594,8 @@ export default function ProfilePage() {
                   <div style={styles.clanRoster}>
                     {displayMembers.map((member, idx) => (
                       <div key={idx} style={{ 
-                        ...styles.rosterRow, 
-                        borderLeft: member.name.includes('(You)') ? '3px solid var(--accent-color)' : '1px solid rgba(255,255,255,0.03)' 
+                         ...styles.rosterRow, 
+                         borderLeft: member.name.includes('(You)') ? '3px solid var(--accent-color)' : '1px solid rgba(255,255,255,0.03)' 
                       }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <span style={styles.rosterRankNum}>{idx + 1}</span>
@@ -509,6 +611,32 @@ export default function ProfilePage() {
                         <span style={styles.rosterXp}>{member.xp} XP</span>
                       </div>
                     ))}
+                  </div>
+
+                  {/* Dynamic Global Guild Leaderboard Standings inside Clan Roster view */}
+                  <div style={{ marginTop: '1.25rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem' }}>
+                    <div style={styles.memberSectionTitle}>🏆 GLOBAL GUILD STANDINGS</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '6px' }}>
+                      {liveClans.map((cItem, index) => (
+                        <div key={cItem.id} style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          backgroundColor: cItem.id === clan ? 'rgba(6, 182, 212, 0.08)' : 'rgba(0,0,0,0.12)',
+                          border: cItem.id === clan ? '1px solid rgba(6, 182, 212, 0.2)' : '1px solid transparent',
+                          padding: '0.4rem 0.6rem',
+                          borderRadius: '6px',
+                          fontSize: '0.7rem'
+                        }}>
+                          <span style={{ fontWeight: '700', color: '#FFF' }}>
+                            {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'} {cItem.emoji} {cItem.name}
+                          </span>
+                          <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-color)', fontWeight: 'bold' }}>
+                            {cItem.totalXp} XP ({cItem.memberCount} members)
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   <button 
