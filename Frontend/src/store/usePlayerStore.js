@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { audioManager } from '../utils/audioManager';
+import { clearAuthSession } from '../utils/auth';
 
 const RANKS = [
   { name: 'Fresher', xpNeeded: 0 },
@@ -68,7 +69,7 @@ const syncProgressWithBackend = async (state) => {
   if (!token || !state.profileLoaded) return;
 
   try {
-    await fetch(`${window.API_BASE_URL || (window.API_BASE_URL || 'http://localhost:5000')}/api/auth/progress`, {
+    const response = await fetch(`${window.API_BASE_URL || (window.API_BASE_URL || 'http://localhost:5000')}/api/auth/progress`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -85,6 +86,10 @@ const syncProgressWithBackend = async (state) => {
         clan: state.clan
       })
     });
+    if (response.status === 401) {
+      clearAuthSession();
+      get().resetGame();
+    }
   } catch (error) {
     console.warn("Backend sync failed:", error);
   }

@@ -527,7 +527,7 @@ export default function LandingPage() {
                         <Mail size={16} color="var(--text-secondary)" />
                         <input 
                           type="email" 
-                          placeholder="e.g. developer@quest.com"
+                          placeholder="e.g. saulgoodman@gmail.com"
                           value={emailInput}
                           onChange={(e) => setEmailInput(e.target.value)}
                           style={styles.input}

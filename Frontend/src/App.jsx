@@ -15,6 +15,7 @@ import InterviewEscapeRoom from './games/InterviewEscapeRoom';
 import ResumeBuilderTycoon from './games/ResumeBuilderTycoon';
 import CodeSnake from './games/CodeSnake';
 import AiMasterChallenge from './games/AiMasterChallenge';
+import { clearAuthSession, isTokenExpired } from './utils/auth';
 
 window.API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -61,17 +62,27 @@ export default function App() {
 
   React.useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token) {
+    if (token && !isTokenExpired(token)) {
       fetch(`${window.API_BASE_URL || (window.API_BASE_URL || 'http://localhost:5000')}/api/auth/me`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
-      .then(res => res.json())
+      .then(async (res) => {
+        if (res.status === 401) {
+          clearAuthSession();
+          usePlayerStore.getState().resetGame();
+          return null;
+        }
+        return res.json();
+      })
       .then(data => {
-        if (data.success && data.student) {
+        if (data?.success && data.student) {
           usePlayerStore.getState().mergeAndSyncProfile(data.student);
         }
       })
       .catch(() => {});
+    } else if (token) {
+      clearAuthSession();
+      usePlayerStore.getState().resetGame();
     }
   }, []);
 
