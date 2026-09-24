@@ -28,6 +28,10 @@ connectDB().then(async () => {
 
 const app = express();
 
+const allowedOrigins = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(',').map((origin) => origin.trim()).filter(Boolean)
+  : '*';
+
 // 1. Security Headers Configuration (XSS protection, MIME checks)
 app.use(helmet());
 
@@ -37,7 +41,7 @@ app.use(querySanitizer);
 
 // 2. CORS Locking (Allows localhost and wildcard options safely)
 app.use(cors({
-  origin: '*', // We allow wildcard to simplify deployment testing, lock origin to frontend URL in production config
+  origin: allowedOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
